@@ -23,13 +23,15 @@
 class One_Minute_Media_Video_Showcase_Deactivator {
 
 	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
+	 * Flush rewrite rules without deleting plugin content.
 	 *
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
+
+		if ( function_exists( 'flush_rewrite_rules' ) ) {
+			flush_rewrite_rules();
+		}
 
 	}
 

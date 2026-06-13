@@ -76,6 +76,7 @@ class One_Minute_Media_Video_Showcase {
 
 		$this->load_dependencies();
 		$this->set_locale();
+		$this->define_cpt_hooks();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 
@@ -112,6 +113,11 @@ class One_Minute_Media_Video_Showcase {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-one-minute-media-video-showcase-i18n.php';
 
 		/**
+		 * The class responsible for registering the Video Case Study custom post type.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-cpt-video.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-one-minute-media-video-showcase-admin.php';
@@ -140,6 +146,20 @@ class One_Minute_Media_Video_Showcase {
 		$plugin_i18n = new One_Minute_Media_Video_Showcase_i18n();
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
+
+	}
+
+	/**
+	 * Register custom post type hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_cpt_hooks() {
+
+		$plugin_cpt_video = new OMMVS_CPT_Video();
+
+		$this->loader->add_action( 'init', $plugin_cpt_video, 'register_post_type' );
 
 	}
 

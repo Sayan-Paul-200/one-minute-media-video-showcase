@@ -23,13 +23,26 @@
 class One_Minute_Media_Video_Showcase_Activator {
 
 	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
+	 * Register rewrite-dependent structures and flush rewrite rules.
 	 *
 	 * @since    1.0.0
 	 */
 	public static function activate() {
+
+		$plugin_dir = defined( 'OMMVS_PLUGIN_DIR' )
+			? OMMVS_PLUGIN_DIR
+			: plugin_dir_path( dirname( __FILE__ ) );
+
+		require_once $plugin_dir . 'includes/class-ommvs-cpt-video.php';
+
+		if ( class_exists( 'OMMVS_CPT_Video' ) ) {
+			$cpt_video = new OMMVS_CPT_Video();
+			$cpt_video->register_post_type();
+		}
+
+		if ( function_exists( 'flush_rewrite_rules' ) ) {
+			flush_rewrite_rules();
+		}
 
 	}
 
