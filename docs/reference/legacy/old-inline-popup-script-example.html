@@ -1,0 +1,42 @@
+<script>
+    jQuery(function ($) {
+        $('.popup-f').on('click', function (event) {
+            elementorProFrontend.modules.popup.closePopup({}, event);
+        });
+    });
+</script>
+<script type="text/javascript">
+    var myTimeout = setTimeout(myGreeting, 1000);
+    function myGreeting() {
+        document.getElementById("click-a").addEventListener("click", myFunctionupa);
+        document.getElementById("click-b").addEventListener("click", myFunctionupb);
+        document.getElementById("click-c").addEventListener("click", myFunctionupc);
+        var linktwo = window.location.href;
+        var myArrlinktwo = linktwo.match('#nick-kyrgios');
+        var linkatwo = '#nick-kyrgios';
+        function myFunctionupa() {
+            if (myArrlinktwo == linkatwo) {
+                window.location.href = linktwo.replace("#nick-kyrgios", "#professor-justin-yurbery");
+
+            } else {
+
+            }
+        }
+        function myFunctionupb() {
+            if (myArrlinktwo == linkatwo) {
+                window.location.href = linktwo.replace("#nick-kyrgios", "#the-voice-to-parliament");
+
+            } else {
+
+            }
+        }
+        function myFunctionupc() {
+            if (myArrlinktwo == linkatwo) {
+                window.location.href = linktwo.replace("#nick-kyrgios", "#oz-harvest");
+
+            } else {
+
+            }
+        }
+    }
+</script>
