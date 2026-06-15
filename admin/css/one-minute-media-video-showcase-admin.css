@@ -1,4 +1,197 @@
-/**
- * All of the CSS for your admin-specific functionality should be
- * included in this file.
- */
+.ommvs-page-placements {
+	display: grid;
+	gap: 24px;
+}
+
+.ommvs-placement-section {
+	border: 1px solid #dcdcde;
+	background: #fff;
+	padding: 16px;
+}
+
+.ommvs-placement-section__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 12px;
+}
+
+.ommvs-placement-section__header h3 {
+	margin: 0 0 4px;
+}
+
+.ommvs-placement-section__header p {
+	margin: 0;
+	color: #646970;
+}
+
+.ommvs-placement-section__limit {
+	margin: 0 0 12px;
+	padding: 8px 10px;
+	border-left: 4px solid #d63638;
+	background: #fcf0f1;
+	color: #8a2424;
+}
+
+.ommvs-placement-section__empty {
+	margin: 12px 0 0;
+	color: #646970;
+	font-style: italic;
+}
+
+.ommvs-placement-rows {
+	display: grid;
+	gap: 12px;
+}
+
+.ommvs-placement-row {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr) auto;
+	gap: 12px;
+	align-items: start;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+.ommvs-placement-row--placeholder {
+	min-height: 128px;
+	border: 1px dashed #8c8f94;
+	background: #fff;
+}
+
+.ommvs-placement-row__handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+	color: #50575e;
+	cursor: move;
+}
+
+.ommvs-placement-row__fields {
+	display: grid;
+	grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr);
+	gap: 12px;
+	min-width: 0;
+}
+
+.ommvs-placement-field {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+}
+
+.ommvs-placement-field span {
+	font-weight: 600;
+}
+
+.ommvs-placement-field select,
+.ommvs-placement-field input,
+.ommvs-placement-field textarea {
+	width: 100%;
+	max-width: 100%;
+}
+
+.ommvs-placement-field--video,
+.ommvs-placement-thumbnail {
+	grid-column: 1 / -1;
+}
+
+.ommvs-placement-thumbnail {
+	display: grid;
+	gap: 8px;
+}
+
+.ommvs-placement-thumbnail__preview {
+	display: flex;
+	align-items: center;
+	min-height: 48px;
+}
+
+.ommvs-placement-thumbnail__image {
+	display: block;
+	width: 96px;
+	height: 54px;
+	object-fit: cover;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.ommvs-placement-thumbnail__actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.ommvs-placement-row__remove {
+	margin-top: 6px;
+	white-space: nowrap;
+}
+
+.ommvs-settings-page .form-table th {
+	width: 220px;
+}
+
+.ommvs-settings-repeatable {
+	display: grid;
+	gap: 10px;
+	max-width: 680px;
+}
+
+.ommvs-settings-repeatable__rows {
+	display: grid;
+	gap: 8px;
+}
+
+.ommvs-settings-repeatable__row {
+	display: grid;
+	grid-template-columns: 32px minmax(220px, 1fr) auto;
+	gap: 10px;
+	align-items: center;
+}
+
+.ommvs-settings-repeatable__row--placeholder {
+	min-height: 36px;
+	border: 1px dashed #8c8f94;
+	background: #fff;
+}
+
+.ommvs-settings-repeatable__handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+	color: #50575e;
+	cursor: move;
+}
+
+.ommvs-settings-thumbnail {
+	max-width: 420px;
+}
+
+@media (max-width: 782px) {
+	.ommvs-placement-section__header,
+	.ommvs-placement-row,
+	.ommvs-placement-row__fields,
+	.ommvs-settings-repeatable__row {
+		display: grid;
+		grid-template-columns: 1fr;
+	}
+
+	.ommvs-placement-row__handle,
+	.ommvs-settings-repeatable__handle {
+		width: 100%;
+	}
+}

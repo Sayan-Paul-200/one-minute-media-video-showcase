@@ -1,32 +1,220 @@
 (function( $ ) {
 	'use strict';
 
-	/**
-	 * All of the code for your admin-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
+	var settings = window.ommvsAdmin || {};
+
+	function getRows( $section ) {
+		return $section.find( '[data-ommvs-rows]' ).children( '[data-ommvs-row]' );
+	}
+
+	function escapeRegExp( value ) {
+		return value.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	}
+
+	function reindexSection( $section ) {
+		var metaKey = $section.data( 'meta-key' );
+		var namePattern = new RegExp( escapeRegExp( metaKey ) + '\\[[^\\]]+\\]' );
+
+		getRows( $section ).each( function( index ) {
+			var $row = $( this );
+
+			$row.attr( 'data-index', index );
+
+			$row.find( '[name]' ).each( function() {
+				this.name = this.name.replace( namePattern, metaKey + '[' + index + ']' );
+			} );
+		} );
+	}
+
+	function updateSectionState( $section, showLimitMessage ) {
+		var max = parseInt( $section.data( 'max' ), 10 ) || 0;
+		var rowCount = getRows( $section ).length;
+		var isAtMax = max > 0 && rowCount >= max;
+		var $addButton = $section.find( '[data-ommvs-add-row]' );
+
+		$addButton
+			.toggleClass( 'is-at-max', isAtMax )
+			.attr( 'aria-disabled', isAtMax ? 'true' : 'false' );
+		$section.find( '[data-ommvs-limit-message]' ).prop( 'hidden', ! ( showLimitMessage && isAtMax ) );
+		$section.find( '[data-ommvs-empty-message]' ).prop( 'hidden', rowCount > 0 );
+	}
+
+	function initializeSection( $section ) {
+		var $rows = $section.find( '[data-ommvs-rows]' );
+
+		if ( $.fn.sortable ) {
+			$rows.sortable( {
+				cancel: 'input,textarea,select,option',
+				handle: '[data-ommvs-row-handle]',
+				items: '[data-ommvs-row]',
+				placeholder: 'ommvs-placement-row--placeholder',
+				update: function() {
+					reindexSection( $section );
+					updateSectionState( $section, false );
+				}
+			} );
+		}
+
+		reindexSection( $section );
+		updateSectionState( $section, false );
+	}
+
+	function getTemplateHtml( $section ) {
+		return $.trim( $section.find( '[data-ommvs-row-template]' ).html() || '' );
+	}
+
+	function addRow( $section ) {
+		var max = parseInt( $section.data( 'max' ), 10 ) || 0;
+		var rowCount = getRows( $section ).length;
+		var template = getTemplateHtml( $section );
+		var html;
+
+		if ( max > 0 && rowCount >= max ) {
+			updateSectionState( $section, true );
+			return;
+		}
+
+		if ( ! template ) {
+			return;
+		}
+
+		html = template.replace( /__index__/g, rowCount );
+		$section.find( '[data-ommvs-rows]' ).append( html );
+
+		reindexSection( $section );
+		updateSectionState( $section, false );
+	}
+
+	function setThumbnail( $thumbnail, attachment ) {
+		var url = attachment.url;
+		var alt = attachment.alt || '';
+
+		if ( attachment.sizes && attachment.sizes.thumbnail && attachment.sizes.thumbnail.url ) {
+			url = attachment.sizes.thumbnail.url;
+		}
+
+		$thumbnail.find( '[data-ommvs-thumbnail-id]' ).val( attachment.id );
+		$thumbnail.find( '[data-ommvs-thumbnail-preview]' ).empty().append(
+			$( '<img />', {
+				alt: alt,
+				class: 'ommvs-placement-thumbnail__image',
+				src: url
+			} )
+		);
+		$thumbnail.find( '[data-ommvs-remove-thumbnail]' ).prop( 'hidden', false );
+	}
+
+	function clearThumbnail( $thumbnail ) {
+		$thumbnail.find( '[data-ommvs-thumbnail-id]' ).val( '' );
+		$thumbnail.find( '[data-ommvs-thumbnail-preview]' ).empty();
+		$thumbnail.find( '[data-ommvs-remove-thumbnail]' ).prop( 'hidden', true );
+	}
+
+	function openThumbnailFrame( $thumbnail ) {
+		var frame = wp.media( {
+			title: settings.strings && settings.strings.chooseThumbnail ? settings.strings.chooseThumbnail : 'Choose Thumbnail',
+			button: {
+				text: settings.strings && settings.strings.useThumbnail ? settings.strings.useThumbnail : 'Use Thumbnail'
+			},
+			library: {
+				type: 'image'
+			},
+			multiple: false
+		} );
+
+		frame.on( 'select', function() {
+			var attachment = frame.state().get( 'selection' ).first().toJSON();
+
+			setThumbnail( $thumbnail, attachment );
+		} );
+
+		frame.open();
+	}
+
+	function getSettingsRows( $repeatable ) {
+		return $repeatable.find( '[data-ommvs-settings-repeatable-rows]' ).children( '[data-ommvs-settings-repeatable-row]' );
+	}
+
+	function reindexSettingsRepeatable( $repeatable ) {
+		var fieldName = $repeatable.data( 'name' );
+
+		getSettingsRows( $repeatable ).each( function( index ) {
+			$( this ).find( '[name]' ).attr( 'name', fieldName + '[' + index + ']' );
+		} );
+	}
+
+	function initializeSettingsRepeatable( $repeatable ) {
+		var $rows = $repeatable.find( '[data-ommvs-settings-repeatable-rows]' );
+
+		if ( $.fn.sortable ) {
+			$rows.sortable( {
+				cancel: 'input,textarea,select,option',
+				handle: '[data-ommvs-settings-row-handle]',
+				items: '[data-ommvs-settings-repeatable-row]',
+				placeholder: 'ommvs-settings-repeatable__row--placeholder',
+				update: function() {
+					reindexSettingsRepeatable( $repeatable );
+				}
+			} );
+		}
+
+		reindexSettingsRepeatable( $repeatable );
+	}
+
+	function addSettingsRow( $repeatable ) {
+		var rowCount = getSettingsRows( $repeatable ).length;
+		var template = $.trim( $repeatable.find( '[data-ommvs-settings-row-template]' ).html() || '' );
+		var html;
+
+		if ( ! template ) {
+			return;
+		}
+
+		html = template.replace( /__index__/g, rowCount );
+		$repeatable.find( '[data-ommvs-settings-repeatable-rows]' ).append( html );
+
+		reindexSettingsRepeatable( $repeatable );
+	}
+
+	$( function() {
+		$( '[data-ommvs-placement-section]' ).each( function() {
+			initializeSection( $( this ) );
+		} );
+
+		$( '[data-ommvs-settings-repeatable]' ).each( function() {
+			initializeSettingsRepeatable( $( this ) );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-add-row]', function() {
+			addRow( $( this ).closest( '[data-ommvs-placement-section]' ) );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-remove-row]', function() {
+			var $section = $( this ).closest( '[data-ommvs-placement-section]' );
+
+			$( this ).closest( '[data-ommvs-row]' ).remove();
+			reindexSection( $section );
+			updateSectionState( $section, false );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-select-thumbnail]', function() {
+			openThumbnailFrame( $( this ).closest( '[data-ommvs-thumbnail]' ) );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-remove-thumbnail]', function() {
+			clearThumbnail( $( this ).closest( '[data-ommvs-thumbnail]' ) );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-settings-add-row]', function() {
+			addSettingsRow( $( this ).closest( '[data-ommvs-settings-repeatable]' ) );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-settings-remove-row]', function() {
+			var $repeatable = $( this ).closest( '[data-ommvs-settings-repeatable]' );
+
+			$( this ).closest( '[data-ommvs-settings-repeatable-row]' ).remove();
+			reindexSettingsRepeatable( $repeatable );
+		} );
+	} );
 
 })( jQuery );

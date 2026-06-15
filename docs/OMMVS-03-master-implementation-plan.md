@@ -530,13 +530,29 @@ Acceptance criteria:
 
 ### Important decision
 
-Recommended approach:
+Approved approach:
 
 ```text
-Use ACF Pro for field groups and repeaters.
+ACF Pro is not available.
+
+Use ACF Free for simple Video Case Study metadata where possible.
+Use plugin-owned custom WordPress metaboxes for repeatable page placements.
+Use a plugin-owned settings page for global modal defaults.
 ```
 
-If ACF Pro is not available, the agent must pause and report that custom metaboxes/repeatable fields are required as an alternative implementation path.
+This preserves the final architecture and editor experience while avoiding any dependency on ACF Pro-only features such as Repeater fields and Options Pages.
+
+Final architecture remains unchanged:
+
+```text
+Video Case Study CPT
+Page-level Featured Videos placements
+Page-level More Videos placements
+Elementor Video Grid widget
+One footer modal
+Page JSON
+JavaScript-owned hash/modal behavior
+```
 
 ---
 
@@ -557,9 +573,11 @@ class OMMVS_Fields {}
 Responsibilities:
 
 ```text
-- Register local ACF field groups if ACF is active.
+- Register local ACF Free field groups for simple Video Case Study fields if ACF is active.
 - Add admin notices if ACF is missing.
 - Define field name constants or static methods for consistent meta access.
+- Define placement meta keys for custom page metaboxes.
+- Define settings option keys for plugin-owned settings.
 ```
 
 Acceptance criteria:
@@ -567,17 +585,18 @@ Acceptance criteria:
 ```text
 - Class loads safely if ACF is absent.
 - No fatal error when acf_add_local_field_group() is unavailable.
+- The plugin can continue with custom metabox/settings code even when ACF Pro is unavailable.
 ```
 
 ---
 
-### Subphase 2.2 — Register Video CPT field group
+### Subphase 2.2 — Register Video CPT fields
 
-Fields for `video_case_study`:
+Preferred implementation:
 
 ```text
-Group: Video Showcase Details
-Location: Post Type == video_case_study
+Use ACF Free local field groups if ACF Free is active.
+If ACF Free is not active, use plugin-owned custom metabox fields for the same meta keys.
 ```
 
 Fields:
@@ -611,16 +630,19 @@ Acceptance criteria:
 ```text
 - Fields appear on Video Case Study edit screen.
 - Fields save correctly.
+- No ACF Pro feature is required.
 ```
 
 ---
 
-### Subphase 2.3 — Register page placement field group
+### Subphase 2.3 — Register page placement metaboxes
+
+ACF Free does not include the required repeater-style editor experience. Implement page placements with plugin-owned custom WordPress metaboxes.
 
 Fields for pages:
 
 ```text
-Group: 1MM Video Showcase
+Metabox: 1MM Video Showcase
 Location: Post Type == page
 ```
 
@@ -628,18 +650,28 @@ Fields:
 
 ```text
 Featured Videos
-- ommvs_featured_videos: Repeater, max 6
+- ommvs_featured_videos: Ordered repeatable array stored in post meta, max 6
   - video: Post Object, post_type video_case_study, required
-  - card_title_override: Text, optional
-  - card_description_override: Textarea, optional
-  - thumbnail_override: Image, optional
 
 More Videos
-- ommvs_more_videos: Repeater
+- ommvs_more_videos: Ordered repeatable array stored in post meta
   - video: Post Object, post_type video_case_study, required
-  - card_title_override: Text, optional
-  - card_description_override: Textarea, optional
-  - thumbnail_override: Image, optional
+
+Deferred:
+- Per-page card title, description, and thumbnail overrides are not part of the current client requirement.
+- Keep page placement rows simple for admin users: select Video Case Study, reorder, remove.
+- If page-specific overrides are requested later, they can be restored as optional row fields without changing the main architecture.
+```
+
+Implementation requirements:
+
+```text
+- Register metaboxes with add_meta_box().
+- Use nonces and capability checks on save.
+- Store sanitized placement arrays in page post meta.
+- Support manual add/remove/reorder behavior in admin.
+- Use Select2 or a WP admin-friendly searchable selector if practical.
+- Keep meta keys identical to the planned ACF names for future compatibility.
 ```
 
 Acceptance criteria:
@@ -649,6 +681,7 @@ Acceptance criteria:
 - Editor can add/reorder featured videos.
 - Editor can add/reorder more videos.
 - Featured videos cannot exceed 6 rows.
+- ACF Pro is not required.
 ```
 
 ---
@@ -667,14 +700,14 @@ Class:
 class OMMVS_Settings {}
 ```
 
-Use an ACF Options Page if ACF Pro supports it.
+Use a plugin-owned settings page built with the WordPress Settings API.
 
 Settings fields:
 
 ```text
 Production Overview label
 Creative section title
-Creative bullet list repeater
+Creative bullet list repeatable setting
 CTA button text
 CTA button URL
 Modal fallback thumbnail optional
@@ -699,13 +732,15 @@ Acceptance criteria:
 ```text
 - Admin can update global modal labels and CTA.
 - Defaults are used if settings are empty.
+- ACF Pro Options Page is not required.
 ```
 
 ---
 
 ### Subphase 2.5 — Add validation
 
-Use ACF validation hooks where possible.
+Use ACF validation hooks only for ACF Free Video CPT fields where available.
+Use WordPress save hooks and custom sanitization/validation for custom metaboxes and plugin settings.
 
 Validation tasks:
 
@@ -846,23 +881,21 @@ video provider
 video ID or URL
 ```
 
-Override logic:
+Card data logic:
 
 ```text
-If placement card title override exists, use it.
-Otherwise use Video CPT default card title.
+Use Video CPT default card title.
 
-If placement card description override exists, use it.
-Otherwise use Video CPT default card description.
+Use Video CPT default card description.
 
-If placement thumbnail override exists, use it.
-Otherwise use Video CPT default card thumbnail.
+Use Video CPT default card thumbnail.
 ```
 
 Acceptance criteria:
 
 ```text
-- Page-specific card overrides work.
+- Page placements define selection and order only.
+- Card data comes from the selected Video Case Study.
 - Video modal content remains global.
 ```
 
@@ -1474,7 +1507,7 @@ Warn if dependencies missing:
 
 ```text
 - Elementor missing: widget unavailable.
-- ACF missing: fields unavailable.
+- ACF Free missing: simple Video CPT fields use plugin-owned fallback metaboxes.
 ```
 
 Acceptance criteria:
@@ -1884,7 +1917,7 @@ The project is complete when:
 
 ```text
 1. Video Case Study CPT works.
-2. ACF/page fields work.
+2. Video CPT fields and page placement metaboxes work.
 3. Global modal settings work.
 4. Elementor Video Grid widget works.
 5. Featured grid renders from page data.
@@ -1906,4 +1939,3 @@ The project is complete when:
 21. The final plugin no longer depends on temporary rollout classes.
 22. The documentation/reference folder remains useful for migration and future maintenance.
 ```
-

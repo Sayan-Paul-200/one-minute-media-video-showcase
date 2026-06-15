@@ -86,4 +86,21 @@ class OMMVS_CPT_Video {
 
 	}
 
+	/**
+	 * Remove native slug UI from the non-public Video Case Study editor.
+	 *
+	 * The frontend hash is stored in the plugin-owned Hash Slug field, not in
+	 * WordPress post_name.
+	 *
+	 * @since    1.0.0
+	 * @param    WP_Post|null    $post    Current Video Case Study post.
+	 */
+	public function remove_slug_metabox( $post = null ) {
+
+		unset( $post );
+
+		remove_meta_box( 'slugdiv', 'video_case_study', 'normal' );
+
+	}
+
 }

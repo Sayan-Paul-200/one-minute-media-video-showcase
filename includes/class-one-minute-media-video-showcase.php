@@ -77,7 +77,10 @@ class One_Minute_Media_Video_Showcase {
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_cpt_hooks();
+		$this->define_field_hooks();
+		$this->define_settings_hooks();
 		$this->define_admin_hooks();
+		$this->define_asset_hooks();
 		$this->define_public_hooks();
 
 	}
@@ -116,6 +119,31 @@ class One_Minute_Media_Video_Showcase {
 		 * The class responsible for registering the Video Case Study custom post type.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-cpt-video.php';
+
+		/**
+		 * The class responsible for defining field keys and field-system hooks.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-fields.php';
+
+		/**
+		 * The class responsible for global modal settings.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-settings.php';
+
+		/**
+		 * The class responsible for calculating related videos.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-related-videos.php';
+
+		/**
+		 * The class responsible for building page video data.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-page-data.php';
+
+		/**
+		 * The class responsible for registering public assets.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-assets.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
@@ -160,6 +188,41 @@ class One_Minute_Media_Video_Showcase {
 		$plugin_cpt_video = new OMMVS_CPT_Video();
 
 		$this->loader->add_action( 'init', $plugin_cpt_video, 'register_post_type' );
+		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_cpt_video, 'remove_slug_metabox' );
+
+	}
+
+	/**
+	 * Register field-system hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_field_hooks() {
+
+		$plugin_fields = new OMMVS_Fields();
+
+		$this->loader->add_action( 'acf/init', $plugin_fields, 'register_field_groups' );
+		$this->loader->add_filter( 'acf/validate_value/name=' . OMMVS_Fields::FIELD_HASH_SLUG, $plugin_fields, 'validate_hash_slug_unique', 10, 4 );
+		$this->loader->add_action( 'add_meta_boxes_page', $plugin_fields, 'register_page_placement_metaboxes' );
+		$this->loader->add_action( 'save_post_page', $plugin_fields, 'save_page_placements', 10, 3 );
+		$this->loader->add_action( 'admin_notices', $plugin_fields, 'maybe_show_missing_acf_notice' );
+		$this->loader->add_action( 'admin_notices', $plugin_fields, 'maybe_show_page_placement_notices' );
+
+	}
+
+	/**
+	 * Register global settings hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_settings_hooks() {
+
+		$plugin_settings = new OMMVS_Settings();
+
+		$this->loader->add_action( 'admin_menu', $plugin_settings, 'register_settings_page' );
+		$this->loader->add_action( 'admin_init', $plugin_settings, 'register_settings' );
 
 	}
 
@@ -180,6 +243,20 @@ class One_Minute_Media_Video_Showcase {
 	}
 
 	/**
+	 * Register frontend asset hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_asset_hooks() {
+
+		$plugin_assets = new OMMVS_Assets();
+
+		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_assets, 'register_public_assets' );
+
+	}
+
+	/**
 	 * Register all of the hooks related to the public-facing functionality
 	 * of the plugin.
 	 *
@@ -188,10 +265,10 @@ class One_Minute_Media_Video_Showcase {
 	 */
 	private function define_public_hooks() {
 
-		$plugin_public = new One_Minute_Media_Video_Showcase_Public( $this->get_plugin_name(), $this->get_version() );
-
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+		/*
+		 * Public assets are registered by OMMVS_Assets and enqueued only by
+		 * frontend renderers, such as the Elementor widget or modal renderer.
+		 */
 
 	}
 

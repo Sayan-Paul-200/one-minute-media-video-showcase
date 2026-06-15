@@ -58,20 +58,13 @@ class One_Minute_Media_Video_Showcase_Admin {
 	 * Register the stylesheets for the admin area.
 	 *
 	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
 	 */
-	public function enqueue_styles() {
+	public function enqueue_styles( $hook_suffix = '' ) {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in One_Minute_Media_Video_Showcase_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The One_Minute_Media_Video_Showcase_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+		if ( ! $this->should_enqueue_plugin_admin_assets( $hook_suffix ) ) {
+			return;
+		}
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/one-minute-media-video-showcase-admin.css', array(), $this->version, 'all' );
 
@@ -81,22 +74,91 @@ class One_Minute_Media_Video_Showcase_Admin {
 	 * Register the JavaScript for the admin area.
 	 *
 	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_scripts( $hook_suffix = '' ) {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in One_Minute_Media_Video_Showcase_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The One_Minute_Media_Video_Showcase_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+		if ( ! $this->should_enqueue_plugin_admin_assets( $hook_suffix ) ) {
+			return;
+		}
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/one-minute-media-video-showcase-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_media();
+
+		wp_enqueue_script(
+			$this->plugin_name,
+			plugin_dir_url( __FILE__ ) . 'js/one-minute-media-video-showcase-admin.js',
+			array( 'jquery', 'jquery-ui-sortable' ),
+			$this->version,
+			true
+		);
+
+		wp_localize_script(
+			$this->plugin_name,
+			'ommvsAdmin',
+			array(
+				'featuredMax' => class_exists( 'OMMVS_Fields' ) ? OMMVS_Fields::FEATURED_VIDEOS_MAX : 6,
+				'strings'     => array(
+					'chooseThumbnail' => __( 'Choose Thumbnail', 'one-minute-media-video-showcase' ),
+					'useThumbnail'    => __( 'Use Thumbnail', 'one-minute-media-video-showcase' ),
+					'maxFeatured'     => __( 'Featured Videos are limited to 6 rows.', 'one-minute-media-video-showcase' ),
+				),
+			)
+		);
+
+	}
+
+	/**
+	 * Determine whether plugin admin assets should load on the current screen.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function should_enqueue_plugin_admin_assets( $hook_suffix ) {
+
+		return $this->is_page_edit_screen( $hook_suffix ) || $this->is_settings_screen( $hook_suffix );
+
+	}
+
+	/**
+	 * Determine whether page placement assets should load on the current screen.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function is_page_edit_screen( $hook_suffix ) {
+
+		if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) ) {
+			return false;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+		if ( $screen && 'page' === $screen->post_type ) {
+			return true;
+		}
+
+		if ( isset( $_GET['post_type'] ) && 'page' === sanitize_key( wp_unslash( $_GET['post_type'] ) ) ) {
+			return true;
+		}
+
+		$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+
+		return $post_id && 'page' === get_post_type( $post_id );
+
+	}
+
+	/**
+	 * Determine whether settings assets should load on the current screen.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function is_settings_screen( $hook_suffix ) {
+
+		return 'settings_page_ommvs-settings' === $hook_suffix;
 
 	}
 
