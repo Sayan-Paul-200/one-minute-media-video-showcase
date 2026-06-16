@@ -81,6 +81,7 @@ class One_Minute_Media_Video_Showcase {
 		$this->define_settings_hooks();
 		$this->define_admin_hooks();
 		$this->define_asset_hooks();
+		$this->define_elementor_hooks();
 		$this->define_public_hooks();
 
 	}
@@ -144,6 +145,11 @@ class One_Minute_Media_Video_Showcase {
 		 * The class responsible for registering public assets.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-assets.php';
+
+		/**
+		 * The class responsible for Elementor integration.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-elementor.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
@@ -253,6 +259,21 @@ class One_Minute_Media_Video_Showcase {
 		$plugin_assets = new OMMVS_Assets();
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_assets, 'register_public_assets' );
+
+	}
+
+	/**
+	 * Register Elementor integration hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_elementor_hooks() {
+
+		$plugin_elementor = new OMMVS_Elementor();
+
+		$this->loader->add_action( 'elementor/elements/categories_registered', $plugin_elementor, 'register_category' );
+		$this->loader->add_action( 'elementor/widgets/register', $plugin_elementor, 'register_widgets' );
 
 	}
 
