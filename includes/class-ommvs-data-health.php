@@ -61,6 +61,7 @@ class OMMVS_Data_Health {
 
 			<?php $this->render_summary( $report ); ?>
 			<?php $this->render_missing_fields_section( $report['missing_fields'] ); ?>
+			<?php $this->render_multiple_categories_section( $report['multiple_categories'] ); ?>
 			<?php $this->render_duplicate_hashes_section( $report['duplicate_hashes'] ); ?>
 			<?php $this->render_duplicate_placements_section( $report['duplicate_placements'] ); ?>
 			<?php $this->render_short_featured_section( $report['short_featured_pages'] ); ?>
@@ -81,6 +82,7 @@ class OMMVS_Data_Health {
 
 		return array(
 			'missing_fields'       => $this->get_videos_missing_required_fields( $video_posts ),
+			'multiple_categories'  => $this->get_videos_with_multiple_categories( $video_posts ),
 			'duplicate_hashes'     => $this->get_duplicate_hashes( $video_posts ),
 			'duplicate_placements' => $this->get_duplicate_page_placements(),
 			'short_featured_pages' => $this->get_pages_with_short_featured_lists(),
@@ -173,6 +175,10 @@ class OMMVS_Data_Health {
 			$missing[] = __( 'Modal title', 'one-minute-media-video-showcase' );
 		}
 
+		if ( empty( $this->get_video_category_terms( $video_id ) ) ) {
+			$missing[] = __( 'Video category', 'one-minute-media-video-showcase' );
+		}
+
 		$overview = get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_OVERVIEW, true );
 
 		if ( '' === trim( wp_strip_all_tags( (string) $overview ) ) ) {
@@ -197,6 +203,42 @@ class OMMVS_Data_Health {
 		}
 
 		return $missing;
+
+	}
+
+	/**
+	 * Find videos assigned to multiple categories.
+	 *
+	 * @since    1.0.0
+	 * @param    WP_Post[]    $video_posts    Video Case Study posts.
+	 * @return   array
+	 */
+	private function get_videos_with_multiple_categories( $video_posts ) {
+
+		$issues = array();
+
+		foreach ( $video_posts as $video_post ) {
+			$terms = $this->get_video_category_terms( $video_post->ID );
+
+			if ( count( $terms ) < 2 ) {
+				continue;
+			}
+
+			$categories = array();
+
+			foreach ( $terms as $term ) {
+				$categories[] = sanitize_text_field( (string) $term->name );
+			}
+
+			$issues[] = array(
+				'video_id'   => (int) $video_post->ID,
+				'title'      => $this->get_post_admin_label( $video_post->ID, __( 'Video', 'one-minute-media-video-showcase' ) ),
+				'edit_url'   => get_edit_post_link( $video_post->ID, '' ),
+				'categories' => $categories,
+			);
+		}
+
+		return $issues;
 
 	}
 
@@ -397,6 +439,7 @@ class OMMVS_Data_Health {
 		<div class="ommvs-health-summary">
 			<?php
 			$this->render_summary_item( __( 'Missing video fields', 'one-minute-media-video-showcase' ), count( $report['missing_fields'] ) );
+			$this->render_summary_item( __( 'Multiple categories', 'one-minute-media-video-showcase' ), count( $report['multiple_categories'] ) );
 			$this->render_summary_item( __( 'Duplicate hashes', 'one-minute-media-video-showcase' ), count( $report['duplicate_hashes'] ) );
 			$this->render_summary_item( __( 'Duplicate placements', 'one-minute-media-video-showcase' ), count( $report['duplicate_placements'] ) );
 			$this->render_summary_item( __( 'Short featured lists', 'one-minute-media-video-showcase' ), count( $report['short_featured_pages'] ) );
@@ -456,6 +499,48 @@ class OMMVS_Data_Health {
 					<tr>
 						<td><?php $this->render_edit_link( $issue['title'], $issue['edit_url'] ); ?></td>
 						<td><?php echo esc_html( implode( ', ', $issue['fields'] ) ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
+
+		$this->render_section_close();
+
+	}
+
+	/**
+	 * Render videos assigned to multiple categories section.
+	 *
+	 * @since    1.0.0
+	 * @param    array    $issues    Section issues.
+	 */
+	private function render_multiple_categories_section( $issues ) {
+
+		$this->render_section_open(
+			__( 'Videos With Multiple Categories', 'one-minute-media-video-showcase' ),
+			__( 'The frontend uses the lowest term ID as the display category when multiple categories are assigned.', 'one-minute-media-video-showcase' )
+		);
+
+		if ( empty( $issues ) ) {
+			$this->render_no_issues();
+			$this->render_section_close();
+			return;
+		}
+
+		?>
+		<table class="widefat striped ommvs-health-table">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Video', 'one-minute-media-video-showcase' ); ?></th>
+					<th><?php esc_html_e( 'Categories', 'one-minute-media-video-showcase' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $issues as $issue ) : ?>
+					<tr>
+						<td><?php $this->render_edit_link( $issue['title'], $issue['edit_url'] ); ?></td>
+						<td><?php echo esc_html( implode( ', ', $issue['categories'] ) ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
@@ -703,6 +788,52 @@ class OMMVS_Data_Health {
 		$hash_slug = trim( sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_HASH_SLUG, true ) ) );
 
 		return ltrim( $hash_slug, '#' );
+
+	}
+
+	/**
+	 * Get Video Category terms assigned to a Video Case Study.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $video_id    Video Case Study post ID.
+	 * @return   WP_Term[]
+	 */
+	private function get_video_category_terms( $video_id ) {
+
+		$terms = wp_get_object_terms(
+			absint( $video_id ),
+			$this->get_video_category_taxonomy(),
+			array(
+				'fields' => 'all',
+			)
+		);
+
+		if ( is_wp_error( $terms ) || empty( $terms ) ) {
+			return array();
+		}
+
+		usort(
+			$terms,
+			static function ( $first_term, $second_term ) {
+				return absint( $first_term->term_id ?? 0 ) <=> absint( $second_term->term_id ?? 0 );
+			}
+		);
+
+		return $terms;
+
+	}
+
+	/**
+	 * Get the Video Category taxonomy slug.
+	 *
+	 * @since    1.0.0
+	 * @return   string
+	 */
+	private function get_video_category_taxonomy() {
+
+		return class_exists( 'OMMVS_Taxonomy_Video_Category' )
+			? OMMVS_Taxonomy_Video_Category::TAXONOMY
+			: 'ommvs_video_category';
 
 	}
 

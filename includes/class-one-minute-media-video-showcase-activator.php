@@ -34,10 +34,16 @@ class One_Minute_Media_Video_Showcase_Activator {
 			: plugin_dir_path( dirname( __FILE__ ) );
 
 		require_once $plugin_dir . 'includes/class-ommvs-cpt-video.php';
+		require_once $plugin_dir . 'includes/class-ommvs-taxonomy-video-category.php';
 
 		if ( class_exists( 'OMMVS_CPT_Video' ) ) {
 			$cpt_video = new OMMVS_CPT_Video();
 			$cpt_video->register_post_type();
+		}
+
+		if ( class_exists( 'OMMVS_Taxonomy_Video_Category' ) ) {
+			$taxonomy_video_category = new OMMVS_Taxonomy_Video_Category();
+			$taxonomy_video_category->register_taxonomy();
 		}
 
 		if ( function_exists( 'flush_rewrite_rules' ) ) {

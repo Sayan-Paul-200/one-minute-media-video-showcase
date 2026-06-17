@@ -77,6 +77,7 @@ class One_Minute_Media_Video_Showcase {
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_cpt_hooks();
+		$this->define_taxonomy_hooks();
 		$this->define_field_hooks();
 		$this->define_settings_hooks();
 		$this->define_data_health_hooks();
@@ -122,6 +123,11 @@ class One_Minute_Media_Video_Showcase {
 		 * The class responsible for registering the Video Case Study custom post type.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-cpt-video.php';
+
+		/**
+		 * The class responsible for registering the Video Category taxonomy.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-taxonomy-video-category.php';
 
 		/**
 		 * The class responsible for defining field keys and field-system hooks.
@@ -209,6 +215,20 @@ class One_Minute_Media_Video_Showcase {
 		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_cpt_video, 'remove_slug_metabox' );
 		$this->loader->add_filter( 'manage_video_case_study_posts_columns', $plugin_cpt_video, 'filter_admin_columns' );
 		$this->loader->add_action( 'manage_video_case_study_posts_custom_column', $plugin_cpt_video, 'render_admin_column', 10, 2 );
+
+	}
+
+	/**
+	 * Register taxonomy hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_taxonomy_hooks() {
+
+		$plugin_taxonomy_video_category = new OMMVS_Taxonomy_Video_Category();
+
+		$this->loader->add_action( 'init', $plugin_taxonomy_video_category, 'register_taxonomy', 11 );
 
 	}
 

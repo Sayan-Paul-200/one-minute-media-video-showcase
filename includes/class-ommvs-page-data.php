@@ -167,6 +167,7 @@ class OMMVS_Page_Data {
 		return array(
 			'id'          => absint( $video_id ),
 			'hash'        => self::get_hash_slug( $video_id ),
+			'category'    => self::get_video_category( $video_id ),
 			'card'        => array(
 				'title'       => sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_CARD_TITLE, true ) ),
 				'description' => sanitize_textarea_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_CARD_DESCRIPTION, true ) ),
@@ -183,6 +184,78 @@ class OMMVS_Page_Data {
 				'thumbnail' => self::get_attachment_data( $related_thumbnail_id, 'medium' ),
 			),
 		);
+
+	}
+
+	/**
+	 * Get the display category for a Video Case Study.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $video_id    Video Case Study post ID.
+	 * @return   array
+	 */
+	private static function get_video_category( $video_id ): array {
+
+		$terms = wp_get_object_terms(
+			absint( $video_id ),
+			self::get_video_category_taxonomy(),
+			array(
+				'fields' => 'all',
+			)
+		);
+
+		if ( is_wp_error( $terms ) || empty( $terms ) ) {
+			return self::get_empty_category_data();
+		}
+
+		usort(
+			$terms,
+			static function ( $first_term, $second_term ) {
+				return absint( $first_term->term_id ?? 0 ) <=> absint( $second_term->term_id ?? 0 );
+			}
+		);
+
+		$term = reset( $terms );
+
+		if ( ! $term instanceof WP_Term ) {
+			return self::get_empty_category_data();
+		}
+
+		return array(
+			'id'   => absint( $term->term_id ),
+			'name' => sanitize_text_field( (string) $term->name ),
+			'slug' => sanitize_title( (string) $term->slug ),
+		);
+
+	}
+
+	/**
+	 * Get an empty category data shape.
+	 *
+	 * @since    1.0.0
+	 * @return   array
+	 */
+	private static function get_empty_category_data(): array {
+
+		return array(
+			'id'   => 0,
+			'name' => '',
+			'slug' => '',
+		);
+
+	}
+
+	/**
+	 * Get the Video Category taxonomy slug.
+	 *
+	 * @since    1.0.0
+	 * @return   string
+	 */
+	private static function get_video_category_taxonomy() {
+
+		return class_exists( 'OMMVS_Taxonomy_Video_Category' )
+			? OMMVS_Taxonomy_Video_Category::TAXONOMY
+			: 'ommvs_video_category';
 
 	}
 
