@@ -244,6 +244,7 @@ class One_Minute_Media_Video_Showcase {
 
 		$this->loader->add_action( 'acf/init', $plugin_fields, 'register_field_groups' );
 		$this->loader->add_filter( 'acf/validate_value/name=' . OMMVS_Fields::FIELD_HASH_SLUG, $plugin_fields, 'validate_hash_slug_unique', 10, 4 );
+		$this->loader->add_filter( 'acf/validate_value/name=' . OMMVS_Fields::FIELD_VIDEO_URL, $plugin_fields, 'validate_vimeo_video_url', 10, 4 );
 		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_fields, 'register_video_fallback_metaboxes' );
 		$this->loader->add_action( 'save_post_video_case_study', $plugin_fields, 'save_video_fallback_fields', 10, 3 );
 		$this->loader->add_action( 'add_meta_boxes_page', $plugin_fields, 'register_page_placement_metaboxes' );

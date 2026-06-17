@@ -27,6 +27,7 @@ class OMMVS_Fields {
 	const FIELD_CARD_THUMBNAIL    = 'ommvs_card_thumbnail';
 	const FIELD_MODAL_TITLE       = 'ommvs_modal_title';
 	const FIELD_MODAL_OVERVIEW    = 'ommvs_modal_overview';
+	const FIELD_MODAL_CONTENT     = 'ommvs_modal_overview';
 	const FIELD_VIDEO_PROVIDER    = 'ommvs_video_provider';
 	const FIELD_VIDEO_ID          = 'ommvs_video_id';
 	const FIELD_VIDEO_URL         = 'ommvs_video_url';
@@ -66,6 +67,64 @@ class OMMVS_Fields {
 	public static function is_acf_available() {
 
 		return function_exists( 'acf_add_local_field_group' );
+
+	}
+
+	/**
+	 * Determine whether a URL is a supported Vimeo video URL.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $url    URL value.
+	 * @return   bool
+	 */
+	public static function is_valid_vimeo_url( $url ) {
+
+		return '' !== self::get_vimeo_video_id_from_url( $url );
+
+	}
+
+	/**
+	 * Extract a Vimeo video ID from a supported Vimeo URL.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $url    URL value.
+	 * @return   string
+	 */
+	public static function get_vimeo_video_id_from_url( $url ) {
+
+		$url = trim( (string) $url );
+
+		if ( '' === $url || '' === esc_url_raw( $url ) ) {
+			return '';
+		}
+
+		$parts = wp_parse_url( $url );
+
+		if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+			return '';
+		}
+
+		$scheme = strtolower( (string) $parts['scheme'] );
+		$host   = strtolower( (string) $parts['host'] );
+
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+			return '';
+		}
+
+		if ( ! in_array( $host, array( 'vimeo.com', 'www.vimeo.com', 'player.vimeo.com' ), true ) ) {
+			return '';
+		}
+
+		$path     = isset( $parts['path'] ) ? trim( (string) $parts['path'], '/' ) : '';
+		$segments = '' !== $path ? explode( '/', $path ) : array();
+
+		foreach ( $segments as $segment ) {
+			if ( preg_match( '/^\d+$/', $segment ) ) {
+				return $segment;
+			}
+		}
+
+		return '';
 
 	}
 
@@ -132,6 +191,38 @@ class OMMVS_Fields {
 				__( 'The hash slug "%s" is already used by another Video Case Study.', 'one-minute-media-video-showcase' ),
 				$hash_slug
 			);
+		}
+
+		return $valid;
+
+	}
+
+	/**
+	 * Validate that the video URL field contains a supported Vimeo URL.
+	 *
+	 * @since    1.0.0
+	 * @param    bool|string    $valid    Existing ACF validation state.
+	 * @param    mixed          $value    Submitted field value.
+	 * @param    array          $field    ACF field settings.
+	 * @param    string         $input    ACF input name.
+	 * @return   bool|string
+	 */
+	public function validate_vimeo_video_url( $valid, $value, $field, $input ) {
+
+		unset( $field, $input );
+
+		if ( true !== $valid ) {
+			return $valid;
+		}
+
+		$url = is_scalar( $value ) ? trim( (string) $value ) : '';
+
+		if ( '' === $url ) {
+			return $valid;
+		}
+
+		if ( ! self::is_valid_vimeo_url( $url ) ) {
+			return __( 'Enter a valid Vimeo video URL, for example https://vimeo.com/879662317.', 'one-minute-media-video-showcase' );
 		}
 
 		return $valid;
@@ -212,74 +303,24 @@ class OMMVS_Fields {
 					),
 					array(
 						'key'           => 'field_ommvs_modal_overview',
-						'label'         => __( 'Production Overview', 'one-minute-media-video-showcase' ),
-						'name'          => self::FIELD_MODAL_OVERVIEW,
+						'label'         => __( 'Modal Content', 'one-minute-media-video-showcase' ),
+						'name'          => self::FIELD_MODAL_CONTENT,
 						'type'          => 'wysiwyg',
-						'instructions'  => __( 'Overview text displayed inside the modal.', 'one-minute-media-video-showcase' ),
+						'instructions'  => __( 'Full modal body content displayed under the modal title and category. Include headings, paragraphs, and bullet lists here.', 'one-minute-media-video-showcase' ),
 						'required'      => 1,
-						'tabs'          => 'visual',
-						'toolbar'       => 'basic',
-						'media_upload'  => 0,
+						'tabs'          => 'all',
+						'toolbar'       => 'full',
+						'media_upload'  => 1,
 						'delay'         => 0,
 					),
 					array(
-						'key'           => 'field_ommvs_video_provider',
-						'label'         => __( 'Video Provider', 'one-minute-media-video-showcase' ),
-						'name'          => self::FIELD_VIDEO_PROVIDER,
-						'type'          => 'select',
-						'instructions'  => __( 'Provider used to build the modal video embed.', 'one-minute-media-video-showcase' ),
-						'required'      => 1,
-						'choices'       => array(
-							'vimeo'   => __( 'Vimeo', 'one-minute-media-video-showcase' ),
-							'youtube' => __( 'YouTube', 'one-minute-media-video-showcase' ),
-							'url'     => __( 'Direct URL', 'one-minute-media-video-showcase' ),
-						),
-						'default_value' => 'vimeo',
-						'allow_null'    => 0,
-						'multiple'      => 0,
-						'ui'            => 0,
-						'return_format' => 'value',
-					),
-					array(
-						'key'               => 'field_ommvs_video_id',
-						'label'             => __( 'Video ID', 'one-minute-media-video-showcase' ),
-						'name'              => self::FIELD_VIDEO_ID,
-						'type'              => 'text',
-						'instructions'      => __( 'Vimeo or YouTube video ID. Required when the provider is Vimeo or YouTube.', 'one-minute-media-video-showcase' ),
-						'required'          => 1,
-						'conditional_logic' => array(
-							array(
-								array(
-									'field'    => 'field_ommvs_video_provider',
-									'operator' => '==',
-									'value'    => 'vimeo',
-								),
-							),
-							array(
-								array(
-									'field'    => 'field_ommvs_video_provider',
-									'operator' => '==',
-									'value'    => 'youtube',
-								),
-							),
-						),
-					),
-					array(
-						'key'               => 'field_ommvs_video_url',
-						'label'             => __( 'Video URL', 'one-minute-media-video-showcase' ),
-						'name'              => self::FIELD_VIDEO_URL,
-						'type'              => 'url',
-						'instructions'      => __( 'Direct video URL. Required when the provider is Direct URL.', 'one-minute-media-video-showcase' ),
-						'required'          => 1,
-						'conditional_logic' => array(
-							array(
-								array(
-									'field'    => 'field_ommvs_video_provider',
-									'operator' => '==',
-									'value'    => 'url',
-								),
-							),
-						),
+						'key'          => 'field_ommvs_video_url',
+						'label'        => __( 'Vimeo Video URL', 'one-minute-media-video-showcase' ),
+						'name'         => self::FIELD_VIDEO_URL,
+						'type'         => 'url',
+						'instructions' => __( 'Paste the Vimeo video URL, for example https://vimeo.com/879662317.', 'one-minute-media-video-showcase' ),
+						'required'     => 1,
+						'placeholder'  => 'https://vimeo.com/879662317',
 					),
 					array(
 						'key'            => 'field_ommvs_related_thumbnail',
@@ -361,12 +402,6 @@ class OMMVS_Fields {
 
 		wp_nonce_field( self::VIDEO_FALLBACK_NONCE_ACTION, self::VIDEO_FALLBACK_NONCE_NAME );
 
-		$provider = sanitize_key( (string) get_post_meta( $post->ID, self::FIELD_VIDEO_PROVIDER, true ) );
-
-		if ( ! in_array( $provider, array( 'vimeo', 'youtube', 'url' ), true ) ) {
-			$provider = 'vimeo';
-		}
-
 		?>
 		<div class="ommvs-video-fallback-fields">
 			<p class="description">
@@ -382,24 +417,8 @@ class OMMVS_Fields {
 					$this->render_fallback_textarea_field( $post->ID, self::FIELD_CARD_DESCRIPTION, __( 'Default Card Description', 'one-minute-media-video-showcase' ), __( 'Short description used on video cards.', 'one-minute-media-video-showcase' ), 3 );
 					$this->render_fallback_thumbnail_field( $post->ID, self::FIELD_CARD_THUMBNAIL, __( 'Default Card Thumbnail', 'one-minute-media-video-showcase' ), __( 'Default card thumbnail. Stored as an attachment ID for consistent rendering.', 'one-minute-media-video-showcase' ) );
 					$this->render_fallback_textarea_field( $post->ID, self::FIELD_MODAL_TITLE, __( 'Modal Title', 'one-minute-media-video-showcase' ), __( 'Title displayed in the modal. This can differ from the card title.', 'one-minute-media-video-showcase' ), 2 );
-					$this->render_fallback_textarea_field( $post->ID, self::FIELD_MODAL_OVERVIEW, __( 'Production Overview', 'one-minute-media-video-showcase' ), __( 'Overview text displayed inside the modal. Basic HTML is allowed.', 'one-minute-media-video-showcase' ), 6, true );
-					?>
-					<tr>
-						<th scope="row">
-							<label for="ommvs-video-provider"><?php esc_html_e( 'Video Provider', 'one-minute-media-video-showcase' ); ?></label>
-						</th>
-						<td>
-							<select id="ommvs-video-provider" name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . self::FIELD_VIDEO_PROVIDER . ']' ); ?>">
-								<option value="vimeo" <?php selected( $provider, 'vimeo' ); ?>><?php esc_html_e( 'Vimeo', 'one-minute-media-video-showcase' ); ?></option>
-								<option value="youtube" <?php selected( $provider, 'youtube' ); ?>><?php esc_html_e( 'YouTube', 'one-minute-media-video-showcase' ); ?></option>
-								<option value="url" <?php selected( $provider, 'url' ); ?>><?php esc_html_e( 'Direct URL', 'one-minute-media-video-showcase' ); ?></option>
-							</select>
-							<p class="description"><?php esc_html_e( 'Provider used to build the modal video embed.', 'one-minute-media-video-showcase' ); ?></p>
-						</td>
-					</tr>
-					<?php
-					$this->render_fallback_text_field( $post->ID, self::FIELD_VIDEO_ID, __( 'Video ID', 'one-minute-media-video-showcase' ), __( 'Vimeo or YouTube video ID. Required when the provider is Vimeo or YouTube.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_url_field( $post->ID, self::FIELD_VIDEO_URL, __( 'Video URL', 'one-minute-media-video-showcase' ), __( 'Direct video URL. Required when the provider is Direct URL.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_editor_field( $post->ID, self::FIELD_MODAL_CONTENT, __( 'Modal Content', 'one-minute-media-video-showcase' ), __( 'Full modal body content displayed under the modal title and category. Include headings, paragraphs, and bullet lists here.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_url_field( $post->ID, self::FIELD_VIDEO_URL, __( 'Vimeo Video URL', 'one-minute-media-video-showcase' ), __( 'Paste the Vimeo video URL, for example https://vimeo.com/879662317.', 'one-minute-media-video-showcase' ) );
 					$this->render_fallback_thumbnail_field( $post->ID, self::FIELD_RELATED_THUMBNAIL, __( 'Related Thumbnail Override', 'one-minute-media-video-showcase' ), __( 'Optional thumbnail for related cards. Leave empty to use the default card thumbnail.', 'one-minute-media-video-showcase' ) );
 					$this->render_fallback_textarea_field( $post->ID, self::FIELD_ADMIN_NOTES, __( 'Admin Notes', 'one-minute-media-video-showcase' ), __( 'Internal migration or editorial notes. Not rendered on the frontend.', 'one-minute-media-video-showcase' ), 4 );
 					?>
@@ -455,10 +474,8 @@ class OMMVS_Fields {
 		$this->update_textarea_meta( $post_id, self::FIELD_CARD_DESCRIPTION, $this->get_raw_fallback_value( $raw_fields, self::FIELD_CARD_DESCRIPTION ) );
 		$this->update_attachment_meta( $post_id, self::FIELD_CARD_THUMBNAIL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_CARD_THUMBNAIL ) );
 		$this->update_textarea_meta( $post_id, self::FIELD_MODAL_TITLE, $this->get_raw_fallback_value( $raw_fields, self::FIELD_MODAL_TITLE ) );
-		$this->update_html_meta( $post_id, self::FIELD_MODAL_OVERVIEW, $this->get_raw_fallback_value( $raw_fields, self::FIELD_MODAL_OVERVIEW ) );
-		$this->update_provider_meta( $post_id, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_PROVIDER ) );
-		$this->update_text_meta( $post_id, self::FIELD_VIDEO_ID, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_ID ) );
-		$this->update_url_meta( $post_id, self::FIELD_VIDEO_URL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_URL ) );
+		$this->update_html_meta( $post_id, self::FIELD_MODAL_CONTENT, $this->get_raw_fallback_value( $raw_fields, self::FIELD_MODAL_CONTENT ) );
+		$this->update_vimeo_url_meta( $post_id, self::FIELD_VIDEO_URL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_URL ) );
 		$this->update_attachment_meta( $post_id, self::FIELD_RELATED_THUMBNAIL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_RELATED_THUMBNAIL ) );
 		$this->update_textarea_meta( $post_id, self::FIELD_ADMIN_NOTES, $this->get_raw_fallback_value( $raw_fields, self::FIELD_ADMIN_NOTES ) );
 
@@ -593,6 +610,49 @@ class OMMVS_Fields {
 					rows="<?php echo esc_attr( (string) absint( $rows ) ); ?>"
 					class="large-text"
 				><?php echo esc_textarea( $allow_html ? wp_kses_post( $value ) : $value ); ?></textarea>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</td>
+		</tr>
+		<?php
+
+	}
+
+	/**
+	 * Render a fallback rich editor field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 */
+	private function render_fallback_editor_field( $post_id, $meta_key, $label, $description ) {
+
+		$field_id = 'ommvs-' . str_replace( '_', '-', $meta_key );
+		$value    = (string) get_post_meta( $post_id, $meta_key, true );
+
+		?>
+		<tr>
+			<th scope="row">
+				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
+			</th>
+			<td>
+				<div class="ommvs-video-fallback-editor">
+					<?php
+					wp_editor(
+						wp_kses_post( $value ),
+						$field_id,
+						array(
+							'textarea_name' => self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']',
+							'textarea_rows' => 12,
+							'media_buttons' => true,
+							'teeny'         => false,
+							'quicktags'     => true,
+							'tinymce'       => true,
+						)
+					);
+					?>
+				</div>
 				<p class="description"><?php echo esc_html( $description ); ?></p>
 			</td>
 		</tr>
@@ -767,6 +827,27 @@ class OMMVS_Fields {
 		$url = trim( (string) $value );
 
 		if ( '' === $url || ! $this->is_valid_direct_video_url( $url ) ) {
+			delete_post_meta( $post_id, $meta_key );
+			return;
+		}
+
+		update_post_meta( $post_id, $meta_key, esc_url_raw( $url ) );
+
+	}
+
+	/**
+	 * Update a Vimeo URL meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Raw URL.
+	 */
+	private function update_vimeo_url_meta( $post_id, $meta_key, $value ) {
+
+		$url = trim( (string) $value );
+
+		if ( '' === $url || ! self::is_valid_vimeo_url( $url ) ) {
 			delete_post_meta( $post_id, $meta_key );
 			return;
 		}
@@ -1474,8 +1555,7 @@ class OMMVS_Fields {
 	 */
 	private function get_video_required_field_issues( $video_id ) {
 
-		$issues   = array();
-		$provider = get_post_meta( $video_id, self::FIELD_VIDEO_PROVIDER, true );
+		$issues = array();
 
 		if ( '' === trim( (string) get_post_meta( $video_id, self::FIELD_HASH_SLUG, true ) ) ) {
 			$issues[] = __( 'hash slug', 'one-minute-media-video-showcase' );
@@ -1499,26 +1579,16 @@ class OMMVS_Fields {
 			$issues[] = __( 'modal title', 'one-minute-media-video-showcase' );
 		}
 
-		$modal_overview = get_post_meta( $video_id, self::FIELD_MODAL_OVERVIEW, true );
+		$modal_content = get_post_meta( $video_id, self::FIELD_MODAL_CONTENT, true );
 
-		if ( '' === trim( wp_strip_all_tags( (string) $modal_overview ) ) ) {
-			$issues[] = __( 'production overview', 'one-minute-media-video-showcase' );
+		if ( '' === trim( wp_strip_all_tags( (string) $modal_content ) ) ) {
+			$issues[] = __( 'modal content', 'one-minute-media-video-showcase' );
 		}
 
-		if ( ! in_array( $provider, array( 'vimeo', 'youtube', 'url' ), true ) ) {
-			$issues[] = __( 'video provider', 'one-minute-media-video-showcase' );
-		}
+		$vimeo_url = trim( (string) get_post_meta( $video_id, self::FIELD_VIDEO_URL, true ) );
 
-		if ( in_array( $provider, array( 'vimeo', 'youtube' ), true ) && '' === trim( (string) get_post_meta( $video_id, self::FIELD_VIDEO_ID, true ) ) ) {
-			$issues[] = __( 'video ID', 'one-minute-media-video-showcase' );
-		}
-
-		if ( 'url' === $provider ) {
-			$video_url = trim( (string) get_post_meta( $video_id, self::FIELD_VIDEO_URL, true ) );
-
-			if ( ! $this->is_valid_direct_video_url( $video_url ) ) {
-				$issues[] = __( 'video URL', 'one-minute-media-video-showcase' );
-			}
+		if ( ! self::is_valid_vimeo_url( $vimeo_url ) ) {
+			$issues[] = __( 'Vimeo video URL', 'one-minute-media-video-showcase' );
 		}
 
 		return $issues;

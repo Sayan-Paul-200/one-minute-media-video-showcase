@@ -150,8 +150,7 @@ class OMMVS_Data_Health {
 	 */
 	private function get_missing_video_fields( $video_id ) {
 
-		$missing  = array();
-		$provider = sanitize_key( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_PROVIDER, true ) );
+		$missing = array();
 
 		if ( '' === $this->get_normalized_hash_slug( $video_id ) ) {
 			$missing[] = __( 'Hash slug', 'one-minute-media-video-showcase' );
@@ -179,27 +178,16 @@ class OMMVS_Data_Health {
 			$missing[] = __( 'Video category', 'one-minute-media-video-showcase' );
 		}
 
-		$overview = get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_OVERVIEW, true );
+		$modal_content = get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_CONTENT, true );
 
-		if ( '' === trim( wp_strip_all_tags( (string) $overview ) ) ) {
-			$missing[] = __( 'Production overview', 'one-minute-media-video-showcase' );
+		if ( '' === trim( wp_strip_all_tags( (string) $modal_content ) ) ) {
+			$missing[] = __( 'Modal content', 'one-minute-media-video-showcase' );
 		}
 
-		if ( ! in_array( $provider, array( 'vimeo', 'youtube', 'url' ), true ) ) {
-			$missing[] = __( 'Video provider', 'one-minute-media-video-showcase' );
-			return $missing;
-		}
+		$vimeo_url = trim( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) );
 
-		if ( in_array( $provider, array( 'vimeo', 'youtube' ), true ) && '' === trim( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_ID, true ) ) ) {
-			$missing[] = __( 'Video ID', 'one-minute-media-video-showcase' );
-		}
-
-		if ( 'url' === $provider ) {
-			$video_url = trim( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) );
-
-			if ( ! $this->is_valid_direct_video_url( $video_url ) ) {
-				$missing[] = __( 'Video URL', 'one-minute-media-video-showcase' );
-			}
+		if ( ! OMMVS_Fields::is_valid_vimeo_url( $vimeo_url ) ) {
+			$missing[] = __( 'Vimeo Video URL', 'one-minute-media-video-showcase' );
 		}
 
 		return $missing;

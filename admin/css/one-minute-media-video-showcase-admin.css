@@ -185,6 +185,10 @@
 	max-width: 760px;
 }
 
+.ommvs-video-fallback-editor {
+	max-width: 900px;
+}
+
 .ommvs-video-fallback-thumbnail {
 	max-width: 420px;
 }

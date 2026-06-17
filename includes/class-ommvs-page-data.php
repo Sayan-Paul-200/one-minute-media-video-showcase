@@ -159,6 +159,15 @@ class OMMVS_Page_Data {
 
 		$card_thumbnail_id    = absint( get_post_meta( $video_id, OMMVS_Fields::FIELD_CARD_THUMBNAIL, true ) );
 		$related_thumbnail_id = absint( get_post_meta( $video_id, OMMVS_Fields::FIELD_RELATED_THUMBNAIL, true ) );
+		$modal_content        = wp_kses_post( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_CONTENT, true ) );
+		$stored_video_url     = esc_url_raw( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) );
+		$vimeo_url            = OMMVS_Fields::is_valid_vimeo_url( $stored_video_url ) ? $stored_video_url : '';
+		$vimeo_id             = OMMVS_Fields::get_vimeo_video_id_from_url( $vimeo_url );
+		$legacy_provider      = self::get_video_provider( $video_id );
+		$legacy_video_id      = sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_ID, true ) );
+		$compat_provider      = '' !== $vimeo_id ? 'vimeo' : $legacy_provider;
+		$compat_video_id      = '' !== $vimeo_id ? $vimeo_id : $legacy_video_id;
+		$compat_video_url     = '' !== $vimeo_url ? $vimeo_url : $stored_video_url;
 
 		if ( ! $related_thumbnail_id ) {
 			$related_thumbnail_id = $card_thumbnail_id;
@@ -175,10 +184,13 @@ class OMMVS_Page_Data {
 			),
 			'modal'       => array(
 				'title'    => sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_TITLE, true ) ),
-				'overview' => wp_kses_post( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_OVERVIEW, true ) ),
-				'provider' => self::get_video_provider( $video_id ),
-				'videoId'  => sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_ID, true ) ),
-				'videoUrl' => esc_url_raw( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) ),
+				'content'  => $modal_content,
+				'overview' => $modal_content,
+				'vimeoUrl' => $vimeo_url,
+				'vimeoId'  => $vimeo_id,
+				'provider' => $compat_provider,
+				'videoId'  => $compat_video_id,
+				'videoUrl' => $compat_video_url,
 			),
 			'relatedCard' => array(
 				'thumbnail' => self::get_attachment_data( $related_thumbnail_id, 'medium' ),
