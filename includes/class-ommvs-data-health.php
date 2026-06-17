@@ -64,6 +64,7 @@ class OMMVS_Data_Health {
 			<?php $this->render_multiple_categories_section( $report['multiple_categories'] ); ?>
 			<?php $this->render_duplicate_hashes_section( $report['duplicate_hashes'] ); ?>
 			<?php $this->render_duplicate_placements_section( $report['duplicate_placements'] ); ?>
+			<?php $this->render_placement_integrity_section( $report['placement_integrity'] ); ?>
 		</div>
 		<?php
 
@@ -84,6 +85,7 @@ class OMMVS_Data_Health {
 			'multiple_categories'  => $this->get_videos_with_multiple_categories( $video_posts ),
 			'duplicate_hashes'     => $this->get_duplicate_hashes( $video_posts ),
 			'duplicate_placements' => $this->get_duplicate_page_placements(),
+			'placement_integrity'  => $this->get_page_placement_integrity_issues(),
 		);
 
 	}
@@ -319,6 +321,62 @@ class OMMVS_Data_Health {
 	}
 
 	/**
+	 * Find page placements that reference missing, invalid, or inactive videos.
+	 *
+	 * @since    1.0.0
+	 * @return   array
+	 */
+	private function get_page_placement_integrity_issues() {
+
+		$issues = array();
+		$pages  = $this->get_migrated_pages();
+
+		foreach ( $pages as $page ) {
+			$references = array_merge(
+				$this->get_page_placement_references( $page->ID, OMMVS_Fields::META_FEATURED_VIDEOS, __( 'Featured Videos', 'one-minute-media-video-showcase' ) ),
+				$this->get_page_placement_references( $page->ID, OMMVS_Fields::META_MORE_VIDEOS, __( 'More Videos', 'one-minute-media-video-showcase' ) )
+			);
+
+			foreach ( $references as $reference ) {
+				$video_id = absint( $reference['video_id'] );
+				$video    = $video_id ? get_post( $video_id ) : null;
+				$issue    = '';
+
+				if ( ! $video_id ) {
+					$issue = __( 'Missing selected video', 'one-minute-media-video-showcase' );
+				} elseif ( ! $video ) {
+					$issue = __( 'Referenced post does not exist', 'one-minute-media-video-showcase' );
+				} elseif ( 'video_case_study' !== $video->post_type ) {
+					$issue = __( 'Referenced post is not a Video Case Study', 'one-minute-media-video-showcase' );
+				} elseif ( 'trash' === $video->post_status ) {
+					$issue = __( 'Referenced video is in Trash', 'one-minute-media-video-showcase' );
+				} elseif ( ! $this->is_video_active( $video_id ) ) {
+					$issue = __( 'Referenced video is inactive', 'one-minute-media-video-showcase' );
+				}
+
+				if ( '' === $issue ) {
+					continue;
+				}
+
+				$issues[] = array(
+					'page_id'     => (int) $page->ID,
+					'page_title'  => $this->get_post_admin_label( $page->ID, __( 'Page', 'one-minute-media-video-showcase' ) ),
+					'page_url'    => get_edit_post_link( $page->ID, '' ),
+					'video_id'    => (int) $video_id,
+					'video_title' => $video_id ? $this->get_post_admin_label( $video_id, __( 'Post', 'one-minute-media-video-showcase' ) ) : __( 'No video selected', 'one-minute-media-video-showcase' ),
+					'video_url'   => $video_id ? get_edit_post_link( $video_id, '' ) : '',
+					'group'       => $reference['group'],
+					'position'    => (int) $reference['position'],
+					'issue'       => $issue,
+				);
+			}
+		}
+
+		return $issues;
+
+	}
+
+	/**
 	 * Get pages that have OMMVS placement metadata.
 	 *
 	 * @since    1.0.0
@@ -382,6 +440,40 @@ class OMMVS_Data_Health {
 	}
 
 	/**
+	 * Get placement row references from a page meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $page_id        Page post ID.
+	 * @param    string    $meta_key       Placement meta key.
+	 * @param    string    $group_label    Human-readable placement group.
+	 * @return   array
+	 */
+	private function get_page_placement_references( $page_id, $meta_key, $group_label ) {
+
+		$placements = get_post_meta( $page_id, $meta_key, true );
+		$references = array();
+
+		if ( ! is_array( $placements ) ) {
+			return $references;
+		}
+
+		foreach ( $placements as $index => $placement ) {
+			$video_id = is_array( $placement )
+				? absint( $placement[ OMMVS_Fields::PLACEMENT_VIDEO ] ?? 0 )
+				: absint( $placement );
+
+			$references[] = array(
+				'video_id' => $video_id,
+				'group'    => $group_label,
+				'position' => absint( $index ) + 1,
+			);
+		}
+
+		return $references;
+
+	}
+
+	/**
 	 * Render summary cards.
 	 *
 	 * @since    1.0.0
@@ -396,6 +488,7 @@ class OMMVS_Data_Health {
 			$this->render_summary_item( __( 'Multiple categories', 'one-minute-media-video-showcase' ), count( $report['multiple_categories'] ) );
 			$this->render_summary_item( __( 'Duplicate hashes', 'one-minute-media-video-showcase' ), count( $report['duplicate_hashes'] ) );
 			$this->render_summary_item( __( 'Duplicate placements', 'one-minute-media-video-showcase' ), count( $report['duplicate_placements'] ) );
+			$this->render_summary_item( __( 'Placement integrity', 'one-minute-media-video-showcase' ), count( $report['placement_integrity'] ) );
 			?>
 		</div>
 		<?php
@@ -514,7 +607,7 @@ class OMMVS_Data_Health {
 
 		$this->render_section_open(
 			__( 'Duplicate Hashes', 'one-minute-media-video-showcase' ),
-			__( 'Hashes should be unique so direct URL opening can resolve one video on a page.', 'one-minute-media-video-showcase' )
+			__( 'Hashes should be unique so hash-based modal opening can resolve one video on a page.', 'one-minute-media-video-showcase' )
 		);
 
 		if ( empty( $issues ) ) {
@@ -536,6 +629,63 @@ class OMMVS_Data_Health {
 					<tr>
 						<td><code><?php echo esc_html( '#' . $issue['hash'] ); ?></code></td>
 						<td><?php $this->render_link_list( $issue['videos'] ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
+
+		$this->render_section_close();
+
+	}
+
+	/**
+	 * Render placement integrity section.
+	 *
+	 * @since    1.0.0
+	 * @param    array    $issues    Section issues.
+	 */
+	private function render_placement_integrity_section( $issues ) {
+
+		$this->render_section_open(
+			__( 'Placement Integrity', 'one-minute-media-video-showcase' ),
+			__( 'These migrated page placements reference missing, invalid, trashed, or inactive videos.', 'one-minute-media-video-showcase' )
+		);
+
+		if ( empty( $issues ) ) {
+			$this->render_no_issues();
+			$this->render_section_close();
+			return;
+		}
+
+		?>
+		<table class="widefat striped ommvs-health-table">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Page', 'one-minute-media-video-showcase' ); ?></th>
+					<th><?php esc_html_e( 'Placement', 'one-minute-media-video-showcase' ); ?></th>
+					<th><?php esc_html_e( 'Video reference', 'one-minute-media-video-showcase' ); ?></th>
+					<th><?php esc_html_e( 'Issue', 'one-minute-media-video-showcase' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $issues as $issue ) : ?>
+					<tr>
+						<td><?php $this->render_edit_link( $issue['page_title'], $issue['page_url'] ); ?></td>
+						<td>
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: 1: placement group, 2: row number. */
+									__( '%1$s row %2$d', 'one-minute-media-video-showcase' ),
+									$issue['group'],
+									(int) $issue['position']
+								)
+							);
+							?>
+						</td>
+						<td><?php $this->render_edit_link( $issue['video_title'], $issue['video_url'] ); ?></td>
+						<td><?php echo esc_html( $issue['issue'] ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
@@ -790,26 +940,17 @@ class OMMVS_Data_Health {
 	}
 
 	/**
-	 * Check whether a Direct URL video value is an absolute HTTP(S) URL.
+	 * Determine whether a Video Case Study is active.
 	 *
 	 * @since    1.0.0
-	 * @param    string    $url    URL value.
+	 * @param    int    $video_id    Video Case Study post ID.
 	 * @return   bool
 	 */
-	private function is_valid_direct_video_url( $url ) {
+	private function is_video_active( $video_id ) {
 
-		$url = trim( (string) $url );
+		$active = get_post_meta( absint( $video_id ), OMMVS_Fields::FIELD_IS_ACTIVE, true );
 
-		if ( '' === $url || '' === esc_url_raw( $url ) ) {
-			return false;
-		}
-
-		$parts = wp_parse_url( $url );
-
-		return is_array( $parts )
-			&& ! empty( $parts['scheme'] )
-			&& ! empty( $parts['host'] )
-			&& in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true );
+		return '' === $active || '0' !== (string) $active;
 
 	}
 

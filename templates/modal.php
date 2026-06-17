@@ -21,13 +21,11 @@ if ( ! defined( 'WPINC' ) ) {
 			<?php esc_html_e( 'Close', 'one-minute-media-video-showcase' ); ?>
 		</button>
 
-		<div class="ommvs-modal__content">
+		<div class="ommvs-modal__layout">
 			<div class="ommvs-modal__text">
 				<h2 id="ommvs-modal-title" class="ommvs-modal__title" data-ommvs-modal-title></h2>
-				<h3 class="ommvs-modal__overview-label" data-ommvs-modal-overview-label></h3>
-				<div class="ommvs-modal__overview" data-ommvs-modal-overview></div>
-				<h3 class="ommvs-modal__creative-title" data-ommvs-modal-creative-title></h3>
-				<ul class="ommvs-modal__creative-list" data-ommvs-modal-creative-list></ul>
+				<p class="ommvs-modal__category" data-ommvs-modal-category hidden></p>
+				<div class="ommvs-modal__content" data-ommvs-modal-content></div>
 				<a class="ommvs-modal__cta" href="#" data-ommvs-modal-cta></a>
 			</div>
 

@@ -5,6 +5,7 @@
 
 .ommvs-placement-section {
 	border: 1px solid #dcdcde;
+	border-radius: 2px;
 	background: #fff;
 	padding: 16px;
 }
@@ -15,6 +16,10 @@
 	justify-content: space-between;
 	gap: 16px;
 	margin-bottom: 12px;
+}
+
+.ommvs-placement-section__header .button {
+	flex: 0 0 auto;
 }
 
 .ommvs-placement-section__header h3 {
@@ -40,10 +45,11 @@
 .ommvs-placement-row {
 	display: grid;
 	grid-template-columns: 32px minmax(0, 1fr) auto;
-	gap: 12px;
-	align-items: start;
+	gap: 10px;
+	align-items: center;
 	padding: 12px;
 	border: 1px solid #dcdcde;
+	border-radius: 2px;
 	background: #f6f7f7;
 }
 
@@ -67,6 +73,12 @@
 	cursor: move;
 }
 
+.ommvs-placement-row__handle:hover,
+.ommvs-placement-row__handle:focus {
+	border-color: #2271b1;
+	color: #2271b1;
+}
+
 .ommvs-placement-row__fields {
 	display: grid;
 	grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr);
@@ -76,7 +88,7 @@
 
 .ommvs-placement-field {
 	display: grid;
-	gap: 4px;
+	gap: 6px;
 	margin: 0;
 }
 
@@ -94,20 +106,36 @@
 .ommvs-placement-field .select2-container {
 	width: 100% !important;
 	max-width: 100%;
+	min-height: 36px;
 }
 
 .ommvs-placement-field .select2-container--default .select2-selection--single {
 	min-height: 36px;
 	border-color: #8c8f94;
-	border-radius: 0;
+	border-radius: 3px;
+	background: #fff;
 }
 
 .ommvs-placement-field .select2-container--default .select2-selection--single .select2-selection__rendered {
+	padding-right: 34px;
+	color: #2c3338;
 	line-height: 34px;
 }
 
 .ommvs-placement-field .select2-container--default .select2-selection--single .select2-selection__arrow {
 	height: 34px;
+}
+
+.ommvs-placement-field .select2-container--default.select2-container--focus .select2-selection--single,
+.ommvs-placement-field .select2-container--default.select2-container--open .select2-selection--single {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.ommvs-placement-field .select2-container--default .select2-selection--single .select2-selection__clear {
+	margin-right: 8px;
+	color: #646970;
+	font-weight: 400;
 }
 
 .ommvs-placement-field--video,
@@ -142,12 +170,17 @@
 }
 
 .ommvs-placement-row__remove {
-	margin-top: 6px;
+	margin-top: 0;
 	white-space: nowrap;
 }
 
 .ommvs-settings-page .form-table th {
 	width: 220px;
+}
+
+.ommvs-settings-page .regular-text {
+	max-width: 420px;
+	width: 100%;
 }
 
 .ommvs-settings-thumbnail {
@@ -162,6 +195,18 @@
 	max-width: 900px;
 }
 
+.ommvs-video-fallback-editor .wp-editor-wrap {
+	max-width: 900px;
+}
+
+.ommvs-video-fallback-editor .wp-editor-container {
+	border-color: #c3c4c7;
+}
+
+.ommvs-video-fallback-editor .wp-editor-area {
+	min-height: 220px;
+}
+
 .ommvs-video-fallback-thumbnail {
 	max-width: 420px;
 }
@@ -174,9 +219,17 @@
 	width: 180px;
 }
 
-.post-type-video_case_study .column-ommvs_active_status,
-.post-type-video_case_study .column-ommvs_video_provider {
+.post-type-video_case_study .column-ommvs_active_status {
 	width: 130px;
+}
+
+.post-type-video_case_study .column-ommvs_video_category {
+	width: 170px;
+}
+
+.post-type-video_case_study .column-ommvs_vimeo_url_status,
+.post-type-video_case_study .column-ommvs_modal_content_status {
+	width: 140px;
 }
 
 .ommvs-admin-video-thumbnail__image {
@@ -190,6 +243,7 @@
 
 .ommvs-admin-status {
 	display: inline-block;
+	margin: 0 0 4px;
 	padding: 2px 8px;
 	border-radius: 999px;
 	font-size: 12px;
@@ -217,6 +271,18 @@
 	white-space: nowrap;
 }
 
+.ommvs-admin-category {
+	display: inline-block;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+}
+
+.ommvs-admin-vimeo-id {
+	display: inline-block;
+	margin-top: 2px;
+	white-space: nowrap;
+}
+
 .ommvs-admin-muted {
 	color: #646970;
 }
@@ -227,7 +293,7 @@
 
 .ommvs-health-summary {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	gap: 12px;
 	margin: 20px 0 24px;
 }
@@ -284,6 +350,15 @@
 
 	.ommvs-placement-row__handle {
 		width: 100%;
+	}
+
+	.ommvs-placement-row__remove {
+		width: 100%;
+		text-align: center;
+	}
+
+	.ommvs-settings-page .form-table th {
+		width: auto;
 	}
 
 	.ommvs-health-summary {

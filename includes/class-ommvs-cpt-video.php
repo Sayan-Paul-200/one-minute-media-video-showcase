@@ -113,8 +113,13 @@ class OMMVS_CPT_Video {
 	public function filter_admin_columns( $columns ) {
 
 		$updated_columns = array();
+		$taxonomy_column = 'taxonomy-' . $this->get_video_category_taxonomy();
 
 		foreach ( $columns as $key => $label ) {
+			if ( $taxonomy_column === $key ) {
+				continue;
+			}
+
 			$updated_columns[ $key ] = $label;
 
 			if ( 'cb' === $key ) {
@@ -122,9 +127,11 @@ class OMMVS_CPT_Video {
 			}
 
 			if ( 'title' === $key ) {
-				$updated_columns['ommvs_hash_slug']      = __( 'Hash slug', 'one-minute-media-video-showcase' );
-				$updated_columns['ommvs_active_status']  = __( 'Active status', 'one-minute-media-video-showcase' );
-				$updated_columns['ommvs_video_provider'] = __( 'Video provider', 'one-minute-media-video-showcase' );
+				$updated_columns['ommvs_hash_slug']            = __( 'Hash slug', 'one-minute-media-video-showcase' );
+				$updated_columns['ommvs_active_status']        = __( 'Active', 'one-minute-media-video-showcase' );
+				$updated_columns['ommvs_video_category']       = __( 'Video Category', 'one-minute-media-video-showcase' );
+				$updated_columns['ommvs_vimeo_url_status']     = __( 'Vimeo URL', 'one-minute-media-video-showcase' );
+				$updated_columns['ommvs_modal_content_status'] = __( 'Modal Content', 'one-minute-media-video-showcase' );
 			}
 		}
 
@@ -156,8 +163,16 @@ class OMMVS_CPT_Video {
 				$this->render_active_status_column( $post_id );
 				break;
 
-			case 'ommvs_video_provider':
-				$this->render_video_provider_column( $post_id );
+			case 'ommvs_video_category':
+				$this->render_video_category_column( $post_id );
+				break;
+
+			case 'ommvs_vimeo_url_status':
+				$this->render_vimeo_url_status_column( $post_id );
+				break;
+
+			case 'ommvs_modal_content_status':
+				$this->render_modal_content_status_column( $post_id );
 				break;
 		}
 
@@ -238,31 +253,129 @@ class OMMVS_CPT_Video {
 	}
 
 	/**
-	 * Render the video provider column.
+	 * Render the Video Category column.
 	 *
 	 * @since    1.0.0
 	 * @param    int    $post_id    Current Video Case Study post ID.
 	 */
-	private function render_video_provider_column( $post_id ) {
+	private function render_video_category_column( $post_id ) {
 
-		$provider = sanitize_key( (string) get_post_meta( $post_id, OMMVS_Fields::FIELD_VIDEO_PROVIDER, true ) );
-		$labels   = array(
-			'vimeo'   => __( 'Vimeo', 'one-minute-media-video-showcase' ),
-			'youtube' => __( 'YouTube', 'one-minute-media-video-showcase' ),
-			'url'     => __( 'Direct URL', 'one-minute-media-video-showcase' ),
-		);
+		$terms = $this->get_video_category_terms( $post_id );
 
-		if ( '' === $provider ) {
+		if ( empty( $terms ) ) {
 			$this->render_status_badge( __( 'Missing', 'one-minute-media-video-showcase' ), 'warning' );
 			return;
 		}
 
-		if ( ! isset( $labels[ $provider ] ) ) {
-			$this->render_status_badge( __( 'Unknown', 'one-minute-media-video-showcase' ), 'warning' );
+		$display_term = reset( $terms );
+
+		printf(
+			'<span class="ommvs-admin-category">%s</span>',
+			esc_html( $display_term->name )
+		);
+
+		if ( count( $terms ) > 1 ) {
+			echo '<br>';
+			$this->render_status_badge( __( 'Multiple', 'one-minute-media-video-showcase' ), 'warning' );
+		}
+
+	}
+
+	/**
+	 * Render the Vimeo URL status column.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $post_id    Current Video Case Study post ID.
+	 */
+	private function render_vimeo_url_status_column( $post_id ) {
+
+		$vimeo_url = trim( (string) get_post_meta( $post_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) );
+
+		if ( '' === $vimeo_url ) {
+			$this->render_status_badge( __( 'Missing', 'one-minute-media-video-showcase' ), 'warning' );
 			return;
 		}
 
-		echo esc_html( $labels[ $provider ] );
+		if ( ! OMMVS_Fields::is_valid_vimeo_url( $vimeo_url ) ) {
+			$this->render_status_badge( __( 'Invalid', 'one-minute-media-video-showcase' ), 'warning' );
+			return;
+		}
+
+		$vimeo_id = OMMVS_Fields::get_vimeo_video_id_from_url( $vimeo_url );
+
+		$this->render_status_badge( __( 'Valid', 'one-minute-media-video-showcase' ), 'success' );
+
+		if ( '' !== $vimeo_id ) {
+			printf(
+				'<br><code class="ommvs-admin-vimeo-id">%s</code>',
+				esc_html( $vimeo_id )
+			);
+		}
+
+	}
+
+	/**
+	 * Render the Modal Content status column.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $post_id    Current Video Case Study post ID.
+	 */
+	private function render_modal_content_status_column( $post_id ) {
+
+		$modal_content = get_post_meta( $post_id, OMMVS_Fields::FIELD_MODAL_CONTENT, true );
+
+		if ( '' === trim( wp_strip_all_tags( (string) $modal_content ) ) ) {
+			$this->render_status_badge( __( 'Missing', 'one-minute-media-video-showcase' ), 'warning' );
+			return;
+		}
+
+		$this->render_status_badge( __( 'Ready', 'one-minute-media-video-showcase' ), 'success' );
+
+	}
+
+	/**
+	 * Get Video Category terms assigned to a Video Case Study.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $post_id    Current Video Case Study post ID.
+	 * @return   WP_Term[]
+	 */
+	private function get_video_category_terms( $post_id ) {
+
+		$terms = wp_get_object_terms(
+			absint( $post_id ),
+			$this->get_video_category_taxonomy(),
+			array(
+				'fields' => 'all',
+			)
+		);
+
+		if ( is_wp_error( $terms ) || empty( $terms ) ) {
+			return array();
+		}
+
+		usort(
+			$terms,
+			static function ( $first_term, $second_term ) {
+				return absint( $first_term->term_id ?? 0 ) <=> absint( $second_term->term_id ?? 0 );
+			}
+		);
+
+		return $terms;
+
+	}
+
+	/**
+	 * Get the Video Category taxonomy slug.
+	 *
+	 * @since    1.0.0
+	 * @return   string
+	 */
+	private function get_video_category_taxonomy() {
+
+		return class_exists( 'OMMVS_Taxonomy_Video_Category' )
+			? OMMVS_Taxonomy_Video_Category::TAXONOMY
+			: 'ommvs_video_category';
 
 	}
 

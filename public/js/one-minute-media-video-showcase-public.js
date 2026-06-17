@@ -84,10 +84,8 @@
 		nodes.overlay = root.querySelector( '[data-ommvs-modal-overlay]' );
 		nodes.close = root.querySelector( '[data-ommvs-modal-close]' );
 		nodes.title = root.querySelector( '[data-ommvs-modal-title]' );
-		nodes.overviewLabel = root.querySelector( '[data-ommvs-modal-overview-label]' );
-		nodes.overview = root.querySelector( '[data-ommvs-modal-overview]' );
-		nodes.creativeTitle = root.querySelector( '[data-ommvs-modal-creative-title]' );
-		nodes.creativeList = root.querySelector( '[data-ommvs-modal-creative-list]' );
+		nodes.category = root.querySelector( '[data-ommvs-modal-category]' );
+		nodes.content = root.querySelector( '[data-ommvs-modal-content]' );
 		nodes.cta = root.querySelector( '[data-ommvs-modal-cta]' );
 		nodes.video = root.querySelector( '[data-ommvs-modal-video]' );
 		nodes.related = root.querySelector( '[data-ommvs-modal-related]' );
@@ -260,34 +258,11 @@
 		var cta = isObject( settings.cta ) ? settings.cta : {};
 
 		setText( modal.title, modalData.title || cardData.title || '' );
-		setText( modal.overviewLabel, settings.productionOverviewLabel || '' );
-		setHtml( modal.overview, modalData.overview || '' );
-		setText( modal.creativeTitle, settings.creativeSectionTitle || '' );
-		renderCreativeBullets( settings.creativeBullets );
+		setOptionalText( modal.category, getCategoryName( video ) );
+		setOptionalHtml( modal.content, getModalContent( modalData ) );
 		renderCta( cta );
 		renderVideo( video );
 		renderRelated( video.id );
-	}
-
-	function renderCreativeBullets( bullets ) {
-		clearNode( modal.creativeList );
-
-		if ( ! modal.creativeList || ! Array.isArray( bullets ) ) {
-			return;
-		}
-
-		bullets.forEach( function( bullet ) {
-			var item = null;
-
-			if ( ! isScalar( bullet ) || '' === String( bullet ).trim() ) {
-				return;
-			}
-
-			item = document.createElement( 'li' );
-			item.className = 'ommvs-modal__creative-item';
-			item.textContent = String( bullet ).trim();
-			modal.creativeList.appendChild( item );
-		} );
 	}
 
 	function renderCta( cta ) {
@@ -328,19 +303,13 @@
 
 	function buildIframe( video ) {
 		var modalData = isObject( video.modal ) ? video.modal : {};
-		var provider = isScalar( modalData.provider ) ? String( modalData.provider ).trim().toLowerCase() : '';
-		var providerVideoId = isScalar( modalData.videoId ) ? String( modalData.videoId ).trim() : '';
-		var videoUrl = isScalar( modalData.videoUrl ) ? String( modalData.videoUrl ).trim() : '';
+		var vimeoId = getVimeoId( modalData );
 		var title = modalData.title || ( isObject( video.card ) ? video.card.title : '' ) || 'Video';
 		var src = '';
 		var iframe = null;
 
-		if ( 'vimeo' === provider && '' !== providerVideoId ) {
-			src = 'https://player.vimeo.com/video/' + encodeURIComponent( providerVideoId ) + '?autoplay=1&playsinline=1&autopause=0&title=0&portrait=0&byline=0';
-		} else if ( 'youtube' === provider && '' !== providerVideoId ) {
-			src = 'https://www.youtube.com/embed/' + encodeURIComponent( providerVideoId ) + '?autoplay=1&rel=0';
-		} else if ( 'url' === provider && '' !== videoUrl && isSafeUrl( videoUrl ) ) {
-			src = videoUrl;
+		if ( '' !== vimeoId ) {
+			src = 'https://player.vimeo.com/video/' + encodeURIComponent( vimeoId ) + '?autoplay=1&playsinline=1&autopause=0&title=0&portrait=0&byline=0';
 		}
 
 		if ( '' === src ) {
@@ -353,7 +322,7 @@
 		iframe.title = String( title );
 		iframe.allow = 'autoplay; fullscreen; picture-in-picture';
 		iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-		iframe.setAttribute( 'data-ommvs-video-provider', provider );
+		iframe.setAttribute( 'data-ommvs-video-provider', 'vimeo' );
 		iframe.setAttribute( 'frameborder', '0' );
 
 		return iframe;
@@ -393,17 +362,17 @@
 	}
 
 	function buildRelatedCard( video ) {
-		var cardData = isObject( video.card ) ? video.card : {};
-		var modalData = isObject( video.modal ) ? video.modal : {};
 		var thumbnail = getRelatedThumbnail( video );
 		var button = document.createElement( 'button' );
 		var media = document.createElement( 'span' );
 		var body = document.createElement( 'span' );
 		var title = document.createElement( 'span' );
+		var category = document.createElement( 'span' );
 		var image = null;
 		var videoId = parseVideoId( video.id );
 		var videoHash = isScalar( video.hash ) ? normalizeHash( video.hash ) : '';
-		var videoTitle = getRelatedTitle( cardData, modalData );
+		var videoTitle = getRelatedTitle( video );
+		var categoryName = getCategoryName( video );
 
 		if ( ! videoId ) {
 			return null;
@@ -434,22 +403,101 @@
 		title.textContent = videoTitle;
 
 		body.appendChild( title );
+
+		if ( '' !== categoryName ) {
+			category.className = 'ommvs-modal__related-card-category';
+			category.textContent = categoryName;
+			body.appendChild( category );
+		}
+
 		button.appendChild( media );
 		button.appendChild( body );
 
 		return button;
 	}
 
-	function getRelatedTitle( cardData, modalData ) {
-		if ( isScalar( cardData.title ) && '' !== String( cardData.title ).trim() ) {
-			return String( cardData.title ).trim();
-		}
+	function getRelatedTitle( video ) {
+		var modalData = isObject( video.modal ) ? video.modal : {};
+		var cardData = isObject( video.card ) ? video.card : {};
 
 		if ( isScalar( modalData.title ) && '' !== String( modalData.title ).trim() ) {
 			return String( modalData.title ).trim();
 		}
 
+		if ( isScalar( cardData.title ) && '' !== String( cardData.title ).trim() ) {
+			return String( cardData.title ).trim();
+		}
+
 		return 'Video';
+	}
+
+	function getCategoryName( video ) {
+		var category = isObject( video.category ) ? video.category : {};
+
+		return isScalar( category.name ) ? String( category.name ).trim() : '';
+	}
+
+	function getModalContent( modalData ) {
+		if ( isScalar( modalData.content ) && '' !== String( modalData.content ).trim() ) {
+			return String( modalData.content );
+		}
+
+		if ( isScalar( modalData.overview ) && '' !== String( modalData.overview ).trim() ) {
+			return String( modalData.overview );
+		}
+
+		return '';
+	}
+
+	function getVimeoId( modalData ) {
+		var vimeoId = isScalar( modalData.vimeoId ) ? String( modalData.vimeoId ).trim() : '';
+
+		if ( /^\d+$/.test( vimeoId ) ) {
+			return vimeoId;
+		}
+
+		return getVimeoIdFromUrl( modalData.vimeoUrl );
+	}
+
+	function getVimeoIdFromUrl( url ) {
+		var parser = null;
+		var host = '';
+		var segments = [];
+		var videoIndex = -1;
+
+		if ( ! isScalar( url ) || '' === String( url ).trim() ) {
+			return '';
+		}
+
+		try {
+			parser = new URL( String( url ).trim() );
+		} catch ( error ) {
+			return '';
+		}
+
+		host = parser.hostname.toLowerCase();
+
+		if ( -1 === [ 'vimeo.com', 'www.vimeo.com', 'player.vimeo.com' ].indexOf( host ) ) {
+			return '';
+		}
+
+		segments = parser.pathname.split( '/' ).filter( Boolean );
+
+		if ( 'player.vimeo.com' === host ) {
+			videoIndex = segments.indexOf( 'video' );
+
+			if ( videoIndex >= 0 && segments[ videoIndex + 1 ] && /^\d+$/.test( segments[ videoIndex + 1 ] ) ) {
+				return segments[ videoIndex + 1 ];
+			}
+		}
+
+		for ( var index = 0; index < segments.length; index++ ) {
+			if ( /^\d+$/.test( segments[ index ] ) ) {
+				return segments[ index ];
+			}
+		}
+
+		return '';
 	}
 
 	function getRelatedThumbnail( video ) {
@@ -738,10 +786,26 @@
 		}
 	}
 
-	function setHtml( node, value ) {
-		if ( node ) {
-			node.innerHTML = isScalar( value ) ? String( value ) : '';
+	function setOptionalText( node, value ) {
+		var text = isScalar( value ) ? String( value ).trim() : '';
+
+		if ( ! node ) {
+			return;
 		}
+
+		node.hidden = '' === text;
+		node.textContent = text;
+	}
+
+	function setOptionalHtml( node, value ) {
+		var html = isScalar( value ) ? String( value ) : '';
+
+		if ( ! node ) {
+			return;
+		}
+
+		node.hidden = '' === html.trim();
+		node.innerHTML = html;
 	}
 
 	function clearNode( node ) {
