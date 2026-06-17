@@ -163,11 +163,10 @@ class OMMVS_Page_Data {
 		$stored_video_url     = esc_url_raw( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) );
 		$vimeo_url            = OMMVS_Fields::is_valid_vimeo_url( $stored_video_url ) ? $stored_video_url : '';
 		$vimeo_id             = OMMVS_Fields::get_vimeo_video_id_from_url( $vimeo_url );
-		$legacy_provider      = self::get_video_provider( $video_id );
-		$legacy_video_id      = sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_ID, true ) );
-		$compat_provider      = '' !== $vimeo_id ? 'vimeo' : $legacy_provider;
-		$compat_video_id      = '' !== $vimeo_id ? $vimeo_id : $legacy_video_id;
-		$compat_video_url     = '' !== $vimeo_url ? $vimeo_url : $stored_video_url;
+		$legacy_vimeo_id      = self::get_legacy_vimeo_video_id( $video_id );
+		$compat_provider      = ( '' !== $vimeo_id || '' !== $legacy_vimeo_id ) ? 'vimeo' : '';
+		$compat_video_id      = '' !== $vimeo_id ? $vimeo_id : $legacy_vimeo_id;
+		$compat_video_url     = $vimeo_url;
 
 		if ( ! $related_thumbnail_id ) {
 			$related_thumbnail_id = $card_thumbnail_id;
@@ -383,17 +382,23 @@ class OMMVS_Page_Data {
 	}
 
 	/**
-	 * Get a safe video provider value.
+	 * Get a legacy Vimeo video ID for temporary frontend compatibility.
 	 *
 	 * @since    1.0.0
 	 * @param    int    $video_id    Video Case Study post ID.
 	 * @return   string
 	 */
-	private static function get_video_provider( $video_id ) {
+	private static function get_legacy_vimeo_video_id( $video_id ) {
 
 		$provider = sanitize_key( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_PROVIDER, true ) );
 
-		return in_array( $provider, array( 'vimeo', 'youtube', 'url' ), true ) ? $provider : '';
+		if ( 'vimeo' !== $provider ) {
+			return '';
+		}
+
+		$legacy_video_id = sanitize_text_field( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_ID, true ) );
+
+		return preg_match( '/^\d+$/', $legacy_video_id ) ? $legacy_video_id : '';
 
 	}
 

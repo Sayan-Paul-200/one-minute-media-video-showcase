@@ -23,7 +23,7 @@ class OMMVS_Related_Videos {
 	/**
 	 * Get related video IDs for the current video.
 	 *
-	 * Related videos always come from the current page's Featured Videos list.
+	 * Related videos always come from the current page's full ordered Featured Videos list.
 	 *
 	 * @since    1.0.0
 	 * @param    array    $featured_ids        Ordered Featured Videos IDs for the current page.
