@@ -79,8 +79,10 @@ class One_Minute_Media_Video_Showcase {
 		$this->define_cpt_hooks();
 		$this->define_field_hooks();
 		$this->define_settings_hooks();
+		$this->define_data_health_hooks();
 		$this->define_admin_hooks();
 		$this->define_asset_hooks();
+		$this->define_modal_hooks();
 		$this->define_elementor_hooks();
 		$this->define_public_hooks();
 
@@ -147,9 +149,19 @@ class One_Minute_Media_Video_Showcase {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-assets.php';
 
 		/**
+		 * The class responsible for shared frontend modal rendering.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-modal-renderer.php';
+
+		/**
 		 * The class responsible for Elementor integration.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-elementor.php';
+
+		/**
+		 * The class responsible for read-only migration data health checks.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-data-health.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
@@ -195,6 +207,8 @@ class One_Minute_Media_Video_Showcase {
 
 		$this->loader->add_action( 'init', $plugin_cpt_video, 'register_post_type' );
 		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_cpt_video, 'remove_slug_metabox' );
+		$this->loader->add_filter( 'manage_video_case_study_posts_columns', $plugin_cpt_video, 'filter_admin_columns' );
+		$this->loader->add_action( 'manage_video_case_study_posts_custom_column', $plugin_cpt_video, 'render_admin_column', 10, 2 );
 
 	}
 
@@ -210,6 +224,8 @@ class One_Minute_Media_Video_Showcase {
 
 		$this->loader->add_action( 'acf/init', $plugin_fields, 'register_field_groups' );
 		$this->loader->add_filter( 'acf/validate_value/name=' . OMMVS_Fields::FIELD_HASH_SLUG, $plugin_fields, 'validate_hash_slug_unique', 10, 4 );
+		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_fields, 'register_video_fallback_metaboxes' );
+		$this->loader->add_action( 'save_post_video_case_study', $plugin_fields, 'save_video_fallback_fields', 10, 3 );
 		$this->loader->add_action( 'add_meta_boxes_page', $plugin_fields, 'register_page_placement_metaboxes' );
 		$this->loader->add_action( 'save_post_page', $plugin_fields, 'save_page_placements', 10, 3 );
 		$this->loader->add_action( 'admin_notices', $plugin_fields, 'maybe_show_missing_acf_notice' );
@@ -229,6 +245,20 @@ class One_Minute_Media_Video_Showcase {
 
 		$this->loader->add_action( 'admin_menu', $plugin_settings, 'register_settings_page' );
 		$this->loader->add_action( 'admin_init', $plugin_settings, 'register_settings' );
+
+	}
+
+	/**
+	 * Register data health helper hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_data_health_hooks() {
+
+		$plugin_data_health = new OMMVS_Data_Health();
+
+		$this->loader->add_action( 'admin_menu', $plugin_data_health, 'register_admin_page' );
 
 	}
 
@@ -263,6 +293,20 @@ class One_Minute_Media_Video_Showcase {
 	}
 
 	/**
+	 * Register shared modal rendering hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_modal_hooks() {
+
+		$plugin_modal_renderer = new OMMVS_Modal_Renderer();
+
+		$this->loader->add_action( 'wp_footer', $plugin_modal_renderer, 'render' );
+
+	}
+
+	/**
 	 * Register Elementor integration hooks.
 	 *
 	 * @since    1.0.0
@@ -274,6 +318,7 @@ class One_Minute_Media_Video_Showcase {
 
 		$this->loader->add_action( 'elementor/elements/categories_registered', $plugin_elementor, 'register_category' );
 		$this->loader->add_action( 'elementor/widgets/register', $plugin_elementor, 'register_widgets' );
+		$this->loader->add_action( 'admin_notices', $plugin_elementor, 'maybe_show_missing_elementor_notice' );
 
 	}
 

@@ -115,13 +115,16 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 	 */
 	protected function render() {
 
-		if ( class_exists( 'OMMVS_Assets' ) ) {
-			OMMVS_Assets::enqueue_public_assets();
-		}
-
 		$settings = $this->get_settings_for_display();
 		$source   = $this->get_grid_source( $settings );
 		$page_id  = $this->get_current_page_id();
+
+		if ( class_exists( 'OMMVS_Modal_Renderer' ) ) {
+			OMMVS_Modal_Renderer::mark_required( $page_id );
+		} elseif ( class_exists( 'OMMVS_Assets' ) ) {
+			OMMVS_Assets::enqueue_public_assets();
+		}
+
 		$data     = class_exists( 'OMMVS_Page_Data' ) ? OMMVS_Page_Data::get_page_data( $page_id ) : array();
 		$ids      = $this->get_source_ids( $data, $source );
 		$videos   = isset( $data['videos'] ) && is_array( $data['videos'] ) ? $data['videos'] : array();

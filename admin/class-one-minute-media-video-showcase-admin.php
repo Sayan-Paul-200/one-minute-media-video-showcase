@@ -62,7 +62,7 @@ class One_Minute_Media_Video_Showcase_Admin {
 	 */
 	public function enqueue_styles( $hook_suffix = '' ) {
 
-		if ( ! $this->should_enqueue_plugin_admin_assets( $hook_suffix ) ) {
+		if ( ! $this->should_enqueue_plugin_admin_styles( $hook_suffix ) ) {
 			return;
 		}
 
@@ -78,7 +78,7 @@ class One_Minute_Media_Video_Showcase_Admin {
 	 */
 	public function enqueue_scripts( $hook_suffix = '' ) {
 
-		if ( ! $this->should_enqueue_plugin_admin_assets( $hook_suffix ) ) {
+		if ( ! $this->should_enqueue_plugin_admin_scripts( $hook_suffix ) ) {
 			return;
 		}
 
@@ -108,15 +108,34 @@ class One_Minute_Media_Video_Showcase_Admin {
 	}
 
 	/**
-	 * Determine whether plugin admin assets should load on the current screen.
+	 * Determine whether plugin admin styles should load on the current screen.
 	 *
 	 * @since    1.0.0
 	 * @param    string    $hook_suffix    The current admin page hook suffix.
 	 * @return   bool
 	 */
-	private function should_enqueue_plugin_admin_assets( $hook_suffix ) {
+	private function should_enqueue_plugin_admin_styles( $hook_suffix ) {
 
-		return $this->is_page_edit_screen( $hook_suffix ) || $this->is_settings_screen( $hook_suffix );
+		return $this->is_page_edit_screen( $hook_suffix )
+			|| $this->is_settings_screen( $hook_suffix )
+			|| $this->is_data_health_screen( $hook_suffix )
+			|| $this->is_video_case_study_list_screen( $hook_suffix )
+			|| $this->is_video_case_study_fallback_edit_screen( $hook_suffix );
+
+	}
+
+	/**
+	 * Determine whether plugin admin scripts should load on the current screen.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function should_enqueue_plugin_admin_scripts( $hook_suffix ) {
+
+		return $this->is_page_edit_screen( $hook_suffix )
+			|| $this->is_settings_screen( $hook_suffix )
+			|| $this->is_video_case_study_fallback_edit_screen( $hook_suffix );
 
 	}
 
@@ -159,6 +178,75 @@ class One_Minute_Media_Video_Showcase_Admin {
 	private function is_settings_screen( $hook_suffix ) {
 
 		return 'settings_page_ommvs-settings' === $hook_suffix;
+
+	}
+
+	/**
+	 * Determine whether the current screen is the Data Health admin page.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function is_data_health_screen( $hook_suffix ) {
+
+		return 'video_case_study_page_ommvs-data-health' === $hook_suffix;
+
+	}
+
+	/**
+	 * Determine whether fallback Video Case Study edit assets should load.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function is_video_case_study_fallback_edit_screen( $hook_suffix ) {
+
+		if ( class_exists( 'OMMVS_Fields' ) && OMMVS_Fields::is_acf_available() ) {
+			return false;
+		}
+
+		if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) ) {
+			return false;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+		if ( $screen && 'video_case_study' === $screen->post_type ) {
+			return true;
+		}
+
+		if ( isset( $_GET['post_type'] ) && 'video_case_study' === sanitize_key( wp_unslash( $_GET['post_type'] ) ) ) {
+			return true;
+		}
+
+		$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+
+		return $post_id && 'video_case_study' === get_post_type( $post_id );
+
+	}
+
+	/**
+	 * Determine whether the current screen is the Video Case Study list table.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function is_video_case_study_list_screen( $hook_suffix ) {
+
+		if ( 'edit.php' !== $hook_suffix ) {
+			return false;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+		if ( $screen && 'video_case_study' === $screen->post_type && 'edit' === $screen->base ) {
+			return true;
+		}
+
+		return isset( $_GET['post_type'] ) && 'video_case_study' === sanitize_key( wp_unslash( $_GET['post_type'] ) );
 
 	}
 

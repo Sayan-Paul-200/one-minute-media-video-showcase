@@ -43,6 +43,10 @@ class OMMVS_Fields {
 	const PAGE_PLACEMENTS_NONCE_ACTION = 'ommvs_save_page_placements';
 	const PAGE_PLACEMENTS_NONCE_NAME   = 'ommvs_page_placements_nonce';
 
+	const VIDEO_FALLBACK_NONCE_ACTION = 'ommvs_save_video_fallback_fields';
+	const VIDEO_FALLBACK_NONCE_NAME   = 'ommvs_video_fallback_nonce';
+	const VIDEO_FALLBACK_FIELD_GROUP  = 'ommvs_video_fallback';
+
 	const PAGE_PLACEMENT_NOTICE_TRANSIENT_PREFIX = 'ommvs_page_validation_';
 
 	const OPTION_SETTINGS                        = 'ommvs_settings';
@@ -319,6 +323,495 @@ class OMMVS_Fields {
 				'show_in_rest'          => 0,
 			)
 		);
+
+	}
+
+	/**
+	 * Register fallback Video Case Study fields when ACF is unavailable.
+	 *
+	 * @since    1.0.0
+	 * @param    WP_Post|null    $post    Current Video Case Study post.
+	 */
+	public function register_video_fallback_metaboxes( $post = null ) {
+
+		unset( $post );
+
+		if ( self::is_acf_available() ) {
+			return;
+		}
+
+		add_meta_box(
+			'ommvs-video-fallback-fields',
+			__( 'Video Showcase Details', 'one-minute-media-video-showcase' ),
+			array( $this, 'render_video_fallback_metabox' ),
+			'video_case_study',
+			'normal',
+			'high'
+		);
+
+	}
+
+	/**
+	 * Render fallback Video Case Study fields.
+	 *
+	 * @since    1.0.0
+	 * @param    WP_Post    $post    Current Video Case Study post.
+	 */
+	public function render_video_fallback_metabox( $post ) {
+
+		wp_nonce_field( self::VIDEO_FALLBACK_NONCE_ACTION, self::VIDEO_FALLBACK_NONCE_NAME );
+
+		$provider = sanitize_key( (string) get_post_meta( $post->ID, self::FIELD_VIDEO_PROVIDER, true ) );
+
+		if ( ! in_array( $provider, array( 'vimeo', 'youtube', 'url' ), true ) ) {
+			$provider = 'vimeo';
+		}
+
+		?>
+		<div class="ommvs-video-fallback-fields">
+			<p class="description">
+				<?php esc_html_e( 'ACF Free is not active, so these plugin-owned fallback fields are saving directly to the same Video Case Study meta keys.', 'one-minute-media-video-showcase' ); ?>
+			</p>
+
+			<table class="form-table ommvs-video-fallback-fields__table" role="presentation">
+				<tbody>
+					<?php
+					$this->render_fallback_text_field( $post->ID, self::FIELD_HASH_SLUG, __( 'Hash Slug', 'one-minute-media-video-showcase' ), __( 'Legacy URL hash without the leading #, for example nick-kyrgios.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_checkbox_field( $post->ID, self::FIELD_IS_ACTIVE, __( 'Active', 'one-minute-media-video-showcase' ), __( 'Inactive videos should not be used in page placements.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_text_field( $post->ID, self::FIELD_CARD_TITLE, __( 'Default Card Title', 'one-minute-media-video-showcase' ), __( 'Title used on video cards.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_textarea_field( $post->ID, self::FIELD_CARD_DESCRIPTION, __( 'Default Card Description', 'one-minute-media-video-showcase' ), __( 'Short description used on video cards.', 'one-minute-media-video-showcase' ), 3 );
+					$this->render_fallback_thumbnail_field( $post->ID, self::FIELD_CARD_THUMBNAIL, __( 'Default Card Thumbnail', 'one-minute-media-video-showcase' ), __( 'Default card thumbnail. Stored as an attachment ID for consistent rendering.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_textarea_field( $post->ID, self::FIELD_MODAL_TITLE, __( 'Modal Title', 'one-minute-media-video-showcase' ), __( 'Title displayed in the modal. This can differ from the card title.', 'one-minute-media-video-showcase' ), 2 );
+					$this->render_fallback_textarea_field( $post->ID, self::FIELD_MODAL_OVERVIEW, __( 'Production Overview', 'one-minute-media-video-showcase' ), __( 'Overview text displayed inside the modal. Basic HTML is allowed.', 'one-minute-media-video-showcase' ), 6, true );
+					?>
+					<tr>
+						<th scope="row">
+							<label for="ommvs-video-provider"><?php esc_html_e( 'Video Provider', 'one-minute-media-video-showcase' ); ?></label>
+						</th>
+						<td>
+							<select id="ommvs-video-provider" name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . self::FIELD_VIDEO_PROVIDER . ']' ); ?>">
+								<option value="vimeo" <?php selected( $provider, 'vimeo' ); ?>><?php esc_html_e( 'Vimeo', 'one-minute-media-video-showcase' ); ?></option>
+								<option value="youtube" <?php selected( $provider, 'youtube' ); ?>><?php esc_html_e( 'YouTube', 'one-minute-media-video-showcase' ); ?></option>
+								<option value="url" <?php selected( $provider, 'url' ); ?>><?php esc_html_e( 'Direct URL', 'one-minute-media-video-showcase' ); ?></option>
+							</select>
+							<p class="description"><?php esc_html_e( 'Provider used to build the modal video embed.', 'one-minute-media-video-showcase' ); ?></p>
+						</td>
+					</tr>
+					<?php
+					$this->render_fallback_text_field( $post->ID, self::FIELD_VIDEO_ID, __( 'Video ID', 'one-minute-media-video-showcase' ), __( 'Vimeo or YouTube video ID. Required when the provider is Vimeo or YouTube.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_url_field( $post->ID, self::FIELD_VIDEO_URL, __( 'Video URL', 'one-minute-media-video-showcase' ), __( 'Direct video URL. Required when the provider is Direct URL.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_thumbnail_field( $post->ID, self::FIELD_RELATED_THUMBNAIL, __( 'Related Thumbnail Override', 'one-minute-media-video-showcase' ), __( 'Optional thumbnail for related cards. Leave empty to use the default card thumbnail.', 'one-minute-media-video-showcase' ) );
+					$this->render_fallback_textarea_field( $post->ID, self::FIELD_ADMIN_NOTES, __( 'Admin Notes', 'one-minute-media-video-showcase' ), __( 'Internal migration or editorial notes. Not rendered on the frontend.', 'one-minute-media-video-showcase' ), 4 );
+					?>
+				</tbody>
+			</table>
+		</div>
+		<?php
+
+	}
+
+	/**
+	 * Save fallback Video Case Study fields when ACF is unavailable.
+	 *
+	 * @since    1.0.0
+	 * @param    int        $post_id    Current post ID.
+	 * @param    WP_Post    $post       Current post object.
+	 * @param    bool       $update     Whether this is an existing post being updated.
+	 */
+	public function save_video_fallback_fields( $post_id, $post, $update ) {
+
+		unset( $update );
+
+		if ( self::is_acf_available() || 'video_case_study' !== $post->post_type ) {
+			return;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		if ( wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) ) {
+			return;
+		}
+
+		if (
+			! isset( $_POST[ self::VIDEO_FALLBACK_NONCE_NAME ] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ self::VIDEO_FALLBACK_NONCE_NAME ] ) ), self::VIDEO_FALLBACK_NONCE_ACTION )
+		) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		$raw_fields = isset( $_POST[ self::VIDEO_FALLBACK_FIELD_GROUP ] ) && is_array( $_POST[ self::VIDEO_FALLBACK_FIELD_GROUP ] )
+			? wp_unslash( $_POST[ self::VIDEO_FALLBACK_FIELD_GROUP ] )
+			: array();
+
+		$this->update_text_meta( $post_id, self::FIELD_HASH_SLUG, ltrim( $this->get_raw_fallback_value( $raw_fields, self::FIELD_HASH_SLUG ), '#' ) );
+		$this->update_bool_meta( $post_id, self::FIELD_IS_ACTIVE, ! empty( $raw_fields[ self::FIELD_IS_ACTIVE ] ) );
+		$this->update_text_meta( $post_id, self::FIELD_CARD_TITLE, $this->get_raw_fallback_value( $raw_fields, self::FIELD_CARD_TITLE ) );
+		$this->update_textarea_meta( $post_id, self::FIELD_CARD_DESCRIPTION, $this->get_raw_fallback_value( $raw_fields, self::FIELD_CARD_DESCRIPTION ) );
+		$this->update_attachment_meta( $post_id, self::FIELD_CARD_THUMBNAIL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_CARD_THUMBNAIL ) );
+		$this->update_textarea_meta( $post_id, self::FIELD_MODAL_TITLE, $this->get_raw_fallback_value( $raw_fields, self::FIELD_MODAL_TITLE ) );
+		$this->update_html_meta( $post_id, self::FIELD_MODAL_OVERVIEW, $this->get_raw_fallback_value( $raw_fields, self::FIELD_MODAL_OVERVIEW ) );
+		$this->update_provider_meta( $post_id, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_PROVIDER ) );
+		$this->update_text_meta( $post_id, self::FIELD_VIDEO_ID, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_ID ) );
+		$this->update_url_meta( $post_id, self::FIELD_VIDEO_URL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_VIDEO_URL ) );
+		$this->update_attachment_meta( $post_id, self::FIELD_RELATED_THUMBNAIL, $this->get_raw_fallback_value( $raw_fields, self::FIELD_RELATED_THUMBNAIL ) );
+		$this->update_textarea_meta( $post_id, self::FIELD_ADMIN_NOTES, $this->get_raw_fallback_value( $raw_fields, self::FIELD_ADMIN_NOTES ) );
+
+	}
+
+	/**
+	 * Render a fallback text field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 */
+	private function render_fallback_text_field( $post_id, $meta_key, $label, $description ) {
+
+		$this->render_fallback_input_field( $post_id, $meta_key, $label, $description, 'text' );
+
+	}
+
+	/**
+	 * Render a fallback URL field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 */
+	private function render_fallback_url_field( $post_id, $meta_key, $label, $description ) {
+
+		$this->render_fallback_input_field( $post_id, $meta_key, $label, $description, 'url' );
+
+	}
+
+	/**
+	 * Render a fallback input field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 * @param    string    $type           Input type.
+	 */
+	private function render_fallback_input_field( $post_id, $meta_key, $label, $description, $type ) {
+
+		$field_id = 'ommvs-' . str_replace( '_', '-', $meta_key );
+		$value    = (string) get_post_meta( $post_id, $meta_key, true );
+
+		?>
+		<tr>
+			<th scope="row">
+				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
+			</th>
+			<td>
+				<input
+					type="<?php echo esc_attr( $type ); ?>"
+					id="<?php echo esc_attr( $field_id ); ?>"
+					name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']' ); ?>"
+					value="<?php echo esc_attr( $value ); ?>"
+					class="regular-text"
+				/>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</td>
+		</tr>
+		<?php
+
+	}
+
+	/**
+	 * Render a fallback checkbox field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 */
+	private function render_fallback_checkbox_field( $post_id, $meta_key, $label, $description ) {
+
+		$field_id = 'ommvs-' . str_replace( '_', '-', $meta_key );
+		$value    = get_post_meta( $post_id, $meta_key, true );
+		$checked  = '' === $value || '0' !== (string) $value;
+
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $label ); ?></th>
+			<td>
+				<label for="<?php echo esc_attr( $field_id ); ?>">
+					<input
+						type="checkbox"
+						id="<?php echo esc_attr( $field_id ); ?>"
+						name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']' ); ?>"
+						value="1"
+						<?php checked( $checked ); ?>
+					/>
+					<?php esc_html_e( 'Active', 'one-minute-media-video-showcase' ); ?>
+				</label>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</td>
+		</tr>
+		<?php
+
+	}
+
+	/**
+	 * Render a fallback textarea field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 * @param    int       $rows           Textarea rows.
+	 * @param    bool      $allow_html     Whether to show stored HTML.
+	 */
+	private function render_fallback_textarea_field( $post_id, $meta_key, $label, $description, $rows = 4, $allow_html = false ) {
+
+		$field_id = 'ommvs-' . str_replace( '_', '-', $meta_key );
+		$value    = (string) get_post_meta( $post_id, $meta_key, true );
+
+		?>
+		<tr>
+			<th scope="row">
+				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
+			</th>
+			<td>
+				<textarea
+					id="<?php echo esc_attr( $field_id ); ?>"
+					name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']' ); ?>"
+					rows="<?php echo esc_attr( (string) absint( $rows ) ); ?>"
+					class="large-text"
+				><?php echo esc_textarea( $allow_html ? wp_kses_post( $value ) : $value ); ?></textarea>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</td>
+		</tr>
+		<?php
+
+	}
+
+	/**
+	 * Render a fallback thumbnail field row.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id        Video post ID.
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $label          Field label.
+	 * @param    string    $description    Field description.
+	 */
+	private function render_fallback_thumbnail_field( $post_id, $meta_key, $label, $description ) {
+
+		$thumbnail_id = absint( get_post_meta( $post_id, $meta_key, true ) );
+
+		if ( ! $this->is_valid_attachment( $thumbnail_id ) ) {
+			$thumbnail_id = 0;
+		}
+
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $label ); ?></th>
+			<td>
+				<div class="ommvs-placement-thumbnail ommvs-video-fallback-thumbnail" data-ommvs-thumbnail>
+					<input
+						type="hidden"
+						name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']' ); ?>"
+						value="<?php echo esc_attr( (string) $thumbnail_id ); ?>"
+						data-ommvs-thumbnail-id
+					/>
+					<div class="ommvs-placement-thumbnail__preview" data-ommvs-thumbnail-preview>
+						<?php
+						if ( $thumbnail_id ) {
+							echo wp_kses_post(
+								wp_get_attachment_image(
+									$thumbnail_id,
+									'thumbnail',
+									false,
+									array(
+										'class' => 'ommvs-placement-thumbnail__image',
+									)
+								)
+							);
+						}
+						?>
+					</div>
+					<div class="ommvs-placement-thumbnail__actions">
+						<button type="button" class="button button-secondary" data-ommvs-select-thumbnail>
+							<?php esc_html_e( 'Choose Image', 'one-minute-media-video-showcase' ); ?>
+						</button>
+						<button type="button" class="button-link-delete" data-ommvs-remove-thumbnail <?php echo $thumbnail_id ? '' : 'hidden'; ?>>
+							<?php esc_html_e( 'Remove Image', 'one-minute-media-video-showcase' ); ?>
+						</button>
+					</div>
+				</div>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</td>
+		</tr>
+		<?php
+
+	}
+
+	/**
+	 * Read one scalar fallback field value.
+	 *
+	 * @since    1.0.0
+	 * @param    array     $fields      Raw fallback fields.
+	 * @param    string    $meta_key    Meta key.
+	 * @return   string
+	 */
+	private function get_raw_fallback_value( $fields, $meta_key ) {
+
+		if ( ! isset( $fields[ $meta_key ] ) || is_array( $fields[ $meta_key ] ) ) {
+			return '';
+		}
+
+		return (string) $fields[ $meta_key ];
+
+	}
+
+	/**
+	 * Update a sanitized text meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Raw value.
+	 */
+	private function update_text_meta( $post_id, $meta_key, $value ) {
+
+		$this->update_or_delete_meta( $post_id, $meta_key, sanitize_text_field( $value ) );
+
+	}
+
+	/**
+	 * Update a sanitized textarea meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Raw value.
+	 */
+	private function update_textarea_meta( $post_id, $meta_key, $value ) {
+
+		$this->update_or_delete_meta( $post_id, $meta_key, sanitize_textarea_field( $value ) );
+
+	}
+
+	/**
+	 * Update a sanitized HTML meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Raw value.
+	 */
+	private function update_html_meta( $post_id, $meta_key, $value ) {
+
+		$this->update_or_delete_meta( $post_id, $meta_key, wp_kses_post( $value ) );
+
+	}
+
+	/**
+	 * Update a boolean meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    bool      $value       Boolean value.
+	 */
+	private function update_bool_meta( $post_id, $meta_key, $value ) {
+
+		update_post_meta( $post_id, $meta_key, $value ? '1' : '0' );
+
+	}
+
+	/**
+	 * Update the video provider meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id    Post ID.
+	 * @param    string    $value      Raw provider value.
+	 */
+	private function update_provider_meta( $post_id, $value ) {
+
+		$provider = sanitize_key( $value );
+
+		if ( ! in_array( $provider, array( 'vimeo', 'youtube', 'url' ), true ) ) {
+			delete_post_meta( $post_id, self::FIELD_VIDEO_PROVIDER );
+			return;
+		}
+
+		update_post_meta( $post_id, self::FIELD_VIDEO_PROVIDER, $provider );
+
+	}
+
+	/**
+	 * Update a URL meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Raw URL.
+	 */
+	private function update_url_meta( $post_id, $meta_key, $value ) {
+
+		$url = trim( (string) $value );
+
+		if ( '' === $url || ! $this->is_valid_direct_video_url( $url ) ) {
+			delete_post_meta( $post_id, $meta_key );
+			return;
+		}
+
+		update_post_meta( $post_id, $meta_key, esc_url_raw( $url ) );
+
+	}
+
+	/**
+	 * Update an attachment ID meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Raw attachment ID.
+	 */
+	private function update_attachment_meta( $post_id, $meta_key, $value ) {
+
+		$attachment_id = absint( $value );
+
+		if ( ! $this->is_valid_attachment( $attachment_id ) ) {
+			delete_post_meta( $post_id, $meta_key );
+			return;
+		}
+
+		update_post_meta( $post_id, $meta_key, $attachment_id );
+
+	}
+
+	/**
+	 * Update or delete a scalar meta value.
+	 *
+	 * @since    1.0.0
+	 * @param    int       $post_id     Post ID.
+	 * @param    string    $meta_key    Meta key.
+	 * @param    string    $value       Sanitized value.
+	 */
+	private function update_or_delete_meta( $post_id, $meta_key, $value ) {
+
+		if ( '' === trim( (string) $value ) ) {
+			delete_post_meta( $post_id, $meta_key );
+			return;
+		}
+
+		update_post_meta( $post_id, $meta_key, $value );
 
 	}
 
@@ -1023,7 +1516,7 @@ class OMMVS_Fields {
 		if ( 'url' === $provider ) {
 			$video_url = trim( (string) get_post_meta( $video_id, self::FIELD_VIDEO_URL, true ) );
 
-			if ( '' === $video_url || '' === esc_url_raw( $video_url ) ) {
+			if ( ! $this->is_valid_direct_video_url( $video_url ) ) {
 				$issues[] = __( 'video URL', 'one-minute-media-video-showcase' );
 			}
 		}
@@ -1087,6 +1580,30 @@ class OMMVS_Fields {
 	}
 
 	/**
+	 * Check whether a Direct URL video value is an absolute HTTP(S) URL.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $url    URL value.
+	 * @return   bool
+	 */
+	private function is_valid_direct_video_url( $url ) {
+
+		$url = trim( (string) $url );
+
+		if ( '' === $url || '' === esc_url_raw( $url ) ) {
+			return false;
+		}
+
+		$parts = wp_parse_url( $url );
+
+		return is_array( $parts )
+			&& ! empty( $parts['scheme'] )
+			&& ! empty( $parts['host'] )
+			&& in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true );
+
+	}
+
+	/**
 	 * Show a safe admin notice when ACF Free is unavailable.
 	 *
 	 * @since    1.0.0
@@ -1110,7 +1627,7 @@ class OMMVS_Fields {
 			<p>
 				<?php
 				echo esc_html__(
-					'1 Minute Media Video Showcase: ACF Free is not active. Simple Video Case Study field groups will not be registered until ACF Free is active; plugin-owned metaboxes and settings will handle repeatable placement data in later field phases.',
+					'1 Minute Media Video Showcase: ACF Free is not active. Plugin-owned fallback fields are available on Video Case Study edit screens, but ACF Free is recommended for the full editing experience.',
 					'one-minute-media-video-showcase'
 				);
 				?>

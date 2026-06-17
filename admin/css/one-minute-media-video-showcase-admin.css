@@ -181,6 +181,122 @@
 	max-width: 420px;
 }
 
+.ommvs-video-fallback-fields__table textarea.large-text {
+	max-width: 760px;
+}
+
+.ommvs-video-fallback-thumbnail {
+	max-width: 420px;
+}
+
+.post-type-video_case_study .column-ommvs_thumbnail {
+	width: 84px;
+}
+
+.post-type-video_case_study .column-ommvs_hash_slug {
+	width: 180px;
+}
+
+.post-type-video_case_study .column-ommvs_active_status,
+.post-type-video_case_study .column-ommvs_video_provider {
+	width: 130px;
+}
+
+.ommvs-admin-video-thumbnail__image {
+	display: block;
+	width: 64px;
+	height: 36px;
+	object-fit: cover;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.ommvs-admin-status {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	white-space: nowrap;
+}
+
+.ommvs-admin-status--success {
+	background: #edfaef;
+	color: #007017;
+}
+
+.ommvs-admin-status--warning {
+	background: #fcf8e3;
+	color: #7a5300;
+}
+
+.ommvs-admin-status--muted {
+	background: #f0f0f1;
+	color: #646970;
+}
+
+.ommvs-admin-hash {
+	white-space: nowrap;
+}
+
+.ommvs-admin-muted {
+	color: #646970;
+}
+
+.ommvs-data-health-page {
+	max-width: 1200px;
+}
+
+.ommvs-health-summary {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+	margin: 20px 0 24px;
+}
+
+.ommvs-health-summary__item {
+	padding: 14px 16px;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.ommvs-health-summary__item strong {
+	display: block;
+	margin-bottom: 4px;
+	color: #1d2327;
+	font-size: 28px;
+	line-height: 1.1;
+}
+
+.ommvs-health-summary__item span {
+	color: #646970;
+}
+
+.ommvs-health-section {
+	margin: 24px 0;
+}
+
+.ommvs-health-section > h2 {
+	margin-bottom: 6px;
+}
+
+.ommvs-health-section > p {
+	margin-top: 0;
+	color: #646970;
+}
+
+.ommvs-health-table {
+	margin-top: 12px;
+}
+
+.ommvs-health-empty {
+	margin: 12px 0 0;
+	padding: 12px;
+	border-left: 4px solid #00a32a;
+	background: #edfaef;
+}
+
 @media (max-width: 782px) {
 	.ommvs-placement-section__header,
 	.ommvs-placement-row,
@@ -193,5 +309,9 @@
 	.ommvs-placement-row__handle,
 	.ommvs-settings-repeatable__handle {
 		width: 100%;
+	}
+
+	.ommvs-health-summary {
+		grid-template-columns: 1fr;
 	}
 }

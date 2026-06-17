@@ -91,6 +91,40 @@ class OMMVS_Elementor {
 	}
 
 	/**
+	 * Show a safe admin notice when Elementor is unavailable.
+	 *
+	 * @since    1.0.0
+	 */
+	public function maybe_show_missing_elementor_notice() {
+
+		if ( class_exists( '\Elementor\Plugin' ) ) {
+			return;
+		}
+
+		if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		?>
+		<div class="notice notice-warning">
+			<p>
+				<?php
+				echo esc_html__(
+					'1 Minute Media Video Showcase: Elementor is not active. The 1MM Video Grid widget is unavailable until Elementor is active; Video Case Study data, settings, and Data Health tools remain available.',
+					'one-minute-media-video-showcase'
+				);
+				?>
+			</p>
+		</div>
+		<?php
+
+	}
+
+	/**
 	 * Get the future Video Grid widget class path.
 	 *
 	 * @since    1.0.0
