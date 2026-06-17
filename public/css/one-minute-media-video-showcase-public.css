@@ -5,7 +5,7 @@
 
 .ommvs-video-grid {
 	--ommvs-card-accent: #18b7b7;
-	--ommvs-card-play: #b58b72;
+	--ommvs-card-play-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Cpath fill='%23fff' fill-opacity='.96' fill-rule='evenodd' d='M25 0a25 25 0 1 0 0 50 25 25 0 1 0 0-50zM20 14l18 11-18 11z'/%3E%3C/svg%3E");
 	--ommvs-card-text: #1f1f1f;
 	--ommvs-card-muted: #6f7278;
 	--ommvs-card-placeholder: #f1f4f5;
@@ -13,12 +13,15 @@
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 24px;
-	align-items: start;
+	align-items: stretch;
 }
 
 .ommvs-video-card {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	width: 100%;
+	height: 100%;
+	min-width: 0;
 	overflow: hidden;
 	background: #fff;
 	border-radius: 4px;
@@ -41,6 +44,7 @@
 .ommvs-video-card__media {
 	position: relative;
 	display: block;
+	flex: 0 0 auto;
 	width: 100%;
 	aspect-ratio: 16 / 9;
 	overflow: hidden;
@@ -79,30 +83,23 @@
 	width: 50px;
 	height: 50px;
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.96);
+	background: transparent var(--ommvs-card-play-icon) center / 100% 100% no-repeat;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
-	transform: translate(-50%, -50%);
+	pointer-events: none;
+	transform: translate3d(-50%, -50%, 0);
 	transition:
-		background-color 180ms ease,
 		box-shadow 180ms ease,
-		transform 180ms ease;
+		opacity 180ms ease;
 }
 
 .ommvs-video-card__play::before {
-	content: "";
-	position: absolute;
-	top: 50%;
-	left: 53%;
-	width: 0;
-	height: 0;
-	border-top: 9px solid transparent;
-	border-bottom: 9px solid transparent;
-	border-left: 15px solid var(--ommvs-card-play);
-	transform: translate(-50%, -50%);
+	display: none;
 }
 
 .ommvs-video-card__body {
-	display: block;
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
 	padding: 14px 10px 28px;
 }
 
@@ -130,9 +127,9 @@
 
 .ommvs-video-card:hover .ommvs-video-card__play,
 .ommvs-video-card:focus-visible .ommvs-video-card__play {
-	background: #fff;
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
-	transform: translate(-50%, -50%) scale(1.04);
+	opacity: 1;
+	transform: translate3d(-50%, -50%, 0);
 }
 
 .ommvs-video-grid__empty {
@@ -153,6 +150,8 @@
 .ommvs-modal {
 	--ommvs-modal-accent: #18b7b7;
 	--ommvs-modal-bg: #000;
+	--ommvs-modal-font: var(--e-global-typography-text-font-family, var(--e-global-typography-primary-font-family, "Montserrat", Arial, sans-serif));
+	--ommvs-modal-heading-font: var(--e-global-typography-primary-font-family, var(--ommvs-modal-font));
 	--ommvs-modal-text: #fff;
 	--ommvs-modal-muted: rgba(255, 255, 255, 0.82);
 	--ommvs-modal-soft: rgba(255, 255, 255, 0.14);
@@ -165,7 +164,7 @@
 	justify-content: center;
 	padding: 32px 24px;
 	color: var(--ommvs-modal-text);
-	font-family: inherit;
+	font-family: var(--ommvs-modal-font);
 }
 
 .ommvs-modal__overlay {
@@ -314,15 +313,17 @@
 	margin: 0 0 18px;
 	color: var(--ommvs-modal-text);
 	font-size: 19px;
-	font-weight: 800;
+	font-family: "Brother-1816-Regular", var(--ommvs-modal-font);
+	font-weight: 700;
 	line-height: 1.25;
 }
 
 .ommvs-modal__content {
 	margin: 0 0 26px;
 	color: var(--ommvs-modal-text);
+	font-family: "Brother-1816-Regular", var(--ommvs-modal-font);
 	font-size: 14px;
-	font-weight: 500;
+	font-weight: 400;
 	line-height: 1.55;
 	overflow-wrap: break-word;
 }
@@ -361,7 +362,7 @@
 	padding-left: 0;
 	color: var(--ommvs-modal-text);
 	font-size: 14px;
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.45;
 	list-style: none;
 }
@@ -383,7 +384,7 @@
 	margin: 0 0 22px;
 	color: var(--ommvs-modal-text);
 	font-size: 14px;
-	font-weight: 500;
+	font-weight: 400;
 	line-height: 1.55;
 }
 
@@ -391,7 +392,8 @@
 	margin: 0;
 	color: var(--ommvs-modal-text);
 	font-size: 19px;
-	font-weight: 800;
+	font-family: "Brother-1816-Regular", var(--ommvs-modal-font);
+	font-weight: 700;
 	line-height: 1.25;
 }
 
@@ -410,7 +412,7 @@
 	margin: 0;
 	color: var(--ommvs-modal-text);
 	font-size: 14px;
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.35;
 }
 
@@ -418,7 +420,7 @@
 .ommvs-modal__content .elementor-icon-list-item > i {
 	flex: 0 0 auto;
 	width: 16px;
-	margin-top: 0.12em;
+	margin-top: 6px;
 	color: var(--ommvs-modal-accent);
 	font-size: 14px;
 	line-height: 1;
@@ -522,7 +524,6 @@
 	color: inherit;
 	text-align: left;
 	cursor: pointer;
-	transition: transform 160ms ease;
 }
 
 .ommvs-modal__related-card-media {
@@ -583,7 +584,7 @@
 
 .ommvs-modal__related-card:hover,
 .ommvs-modal__related-card:focus-visible {
-	transform: translateY(-2px);
+	transform: none;
 }
 
 .ommvs-modal__related-card:hover .ommvs-modal__related-card-image,
@@ -605,12 +606,6 @@
 	.ommvs-video-card__play {
 		width: 48px;
 		height: 48px;
-	}
-
-	.ommvs-video-card__play::before {
-		border-top-width: 8px;
-		border-bottom-width: 8px;
-		border-left-width: 14px;
 	}
 
 	.ommvs-modal {
@@ -801,15 +796,17 @@
 	margin: 0 0 20px;
 	color: var(--ommvs-modal-text);
 	font-size: 19px;
-	font-weight: 800;
+	font-family: "Brother-1816-Regular", var(--ommvs-modal-font);
+	font-weight: 700;
 	line-height: 1.25;
 }
 
 #ommvs-video-modal .ommvs-modal__content {
 	margin: 0 0 24px;
 	color: var(--ommvs-modal-text);
+	font-family: "Brother-1816-Regular", var(--ommvs-modal-font);
 	font-size: 14px;
-	font-weight: 500;
+	font-weight: 400;
 	line-height: 1.55;
 	max-width: 26rem;
 }
@@ -824,7 +821,7 @@
 	padding-left: 0;
 	color: var(--ommvs-modal-text);
 	font-size: 14px;
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.35;
 	list-style: none;
 }
@@ -858,7 +855,7 @@
 	margin: 0 0 22px;
 	color: var(--ommvs-modal-text);
 	font-size: 14px;
-	font-weight: 500;
+	font-weight: 400;
 	line-height: 1.55;
 }
 
@@ -866,7 +863,8 @@
 	margin: 0;
 	color: var(--ommvs-modal-text);
 	font-size: 19px;
-	font-weight: 800;
+	font-family: "Brother-1816-Regular", var(--ommvs-modal-font);
+	font-weight: 700;
 	line-height: 1.25;
 }
 
@@ -885,7 +883,7 @@
 	margin: 0;
 	color: var(--ommvs-modal-text);
 	font-size: 14px;
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.35;
 }
 
@@ -893,7 +891,7 @@
 #ommvs-video-modal .ommvs-modal__content .elementor-icon-list-item > i {
 	flex: 0 0 auto;
 	width: 16px;
-	margin-top: 0.12em;
+	margin-top: 6px;
 	color: var(--ommvs-modal-accent);
 	font-size: 14px;
 	line-height: 1;
