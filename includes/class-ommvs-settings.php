@@ -11,7 +11,7 @@
  */
 
 /**
- * Global modal settings for labels, creative bullets, CTA, and fallback media.
+ * Global modal settings for CTA and fallback media.
  *
  * @since      1.0.0
  * @package    One_Minute_Media_Video_Showcase
@@ -122,27 +122,9 @@ class OMMVS_Settings {
 
 		add_settings_section(
 			self::SECTION_MAIN,
-			__( 'Global Modal Defaults', 'one-minute-media-video-showcase' ),
+			__( 'Global Modal CTA And Fallbacks', 'one-minute-media-video-showcase' ),
 			array( $this, 'render_settings_section' ),
 			self::PAGE_SLUG
-		);
-
-		$this->add_settings_field(
-			OMMVS_Fields::OPTION_PRODUCTION_OVERVIEW_LABEL,
-			__( 'Production Overview Label', 'one-minute-media-video-showcase' ),
-			'render_text_field'
-		);
-
-		$this->add_settings_field(
-			OMMVS_Fields::OPTION_CREATIVE_SECTION_TITLE,
-			__( 'Creative Section Title', 'one-minute-media-video-showcase' ),
-			'render_text_field'
-		);
-
-		$this->add_settings_field(
-			OMMVS_Fields::OPTION_CREATIVE_BULLETS,
-			__( 'Creative Bullet List', 'one-minute-media-video-showcase' ),
-			'render_creative_bullets_field'
 		);
 
 		$this->add_settings_field(
@@ -198,7 +180,7 @@ class OMMVS_Settings {
 	 */
 	public function render_settings_section() {
 
-		echo '<p>' . esc_html__( 'These defaults are used by the shared video modal and later page JSON output.', 'one-minute-media-video-showcase' ) . '</p>';
+		echo '<p>' . esc_html__( 'These settings control the shared modal CTA and fallback thumbnail. Per-video body content is managed on each Video Case Study.', 'one-minute-media-video-showcase' ) . '</p>';
 
 	}
 
@@ -220,68 +202,6 @@ class OMMVS_Settings {
 			name="<?php echo esc_attr( OMMVS_Fields::OPTION_SETTINGS . '[' . $key . ']' ); ?>"
 			value="<?php echo esc_attr( $settings[ $key ] ); ?>"
 		>
-		<?php
-
-	}
-
-	/**
-	 * Render the repeatable creative bullets field.
-	 *
-	 * @since    1.0.0
-	 */
-	public function render_creative_bullets_field( $args = array() ) {
-
-		unset( $args );
-
-		$settings = self::get_settings();
-		$bullets  = $settings[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ];
-
-		if ( empty( $bullets ) || ! is_array( $bullets ) ) {
-			$bullets = self::get_defaults()[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ];
-		}
-
-		?>
-		<div class="ommvs-settings-repeatable" data-ommvs-settings-repeatable data-name="<?php echo esc_attr( OMMVS_Fields::OPTION_SETTINGS . '[' . OMMVS_Fields::OPTION_CREATIVE_BULLETS . ']' ); ?>">
-			<div class="ommvs-settings-repeatable__rows" data-ommvs-settings-repeatable-rows>
-				<?php foreach ( $bullets as $index => $bullet ) : ?>
-					<?php $this->render_creative_bullet_row( (string) $index, $bullet ); ?>
-				<?php endforeach; ?>
-			</div>
-			<button type="button" class="button button-secondary" data-ommvs-settings-add-row>
-				<?php esc_html_e( 'Add Bullet', 'one-minute-media-video-showcase' ); ?>
-			</button>
-			<script type="text/html" data-ommvs-settings-row-template>
-				<?php $this->render_creative_bullet_row( '__index__', '' ); ?>
-			</script>
-		</div>
-		<?php
-
-	}
-
-	/**
-	 * Render a creative bullet row.
-	 *
-	 * @since    1.0.0
-	 * @param    string    $index    Row index or template token.
-	 * @param    string    $value    Row value.
-	 */
-	private function render_creative_bullet_row( $index, $value ) {
-
-		?>
-		<div class="ommvs-settings-repeatable__row" data-ommvs-settings-repeatable-row>
-			<button type="button" class="ommvs-settings-repeatable__handle" data-ommvs-settings-row-handle aria-label="<?php esc_attr_e( 'Drag to reorder', 'one-minute-media-video-showcase' ); ?>">
-				<span class="dashicons dashicons-menu" aria-hidden="true"></span>
-			</button>
-			<input
-				type="text"
-				class="regular-text"
-				name="<?php echo esc_attr( OMMVS_Fields::OPTION_SETTINGS . '[' . OMMVS_Fields::OPTION_CREATIVE_BULLETS . '][' . $index . ']' ); ?>"
-				value="<?php echo esc_attr( $value ); ?>"
-			>
-			<button type="button" class="button-link-delete" data-ommvs-settings-remove-row>
-				<?php esc_html_e( 'Remove', 'one-minute-media-video-showcase' ); ?>
-			</button>
-		</div>
 		<?php
 
 	}
@@ -338,15 +258,17 @@ class OMMVS_Settings {
 
 		$defaults = self::get_defaults();
 		$input    = is_array( $input ) ? $input : array();
+		$existing = get_option( OMMVS_Fields::OPTION_SETTINGS, array() );
 
-		$sanitized = array(
-			OMMVS_Fields::OPTION_PRODUCTION_OVERVIEW_LABEL => $this->sanitize_text_with_default( $input, OMMVS_Fields::OPTION_PRODUCTION_OVERVIEW_LABEL, $defaults ),
-			OMMVS_Fields::OPTION_CREATIVE_SECTION_TITLE    => $this->sanitize_text_with_default( $input, OMMVS_Fields::OPTION_CREATIVE_SECTION_TITLE, $defaults ),
-			OMMVS_Fields::OPTION_CREATIVE_BULLETS          => $this->sanitize_creative_bullets( $input, $defaults ),
-			OMMVS_Fields::OPTION_CTA_BUTTON_TEXT           => $this->sanitize_text_with_default( $input, OMMVS_Fields::OPTION_CTA_BUTTON_TEXT, $defaults ),
-			OMMVS_Fields::OPTION_CTA_BUTTON_URL            => $this->sanitize_cta_url( $input, $defaults ),
-			OMMVS_Fields::OPTION_MODAL_FALLBACK_THUMBNAIL  => $this->sanitize_thumbnail_id( $input ),
-		);
+		if ( ! is_array( $existing ) ) {
+			$existing = array();
+		}
+
+		$sanitized = wp_parse_args( $existing, $defaults );
+
+		$sanitized[ OMMVS_Fields::OPTION_CTA_BUTTON_TEXT ]          = $this->sanitize_text_with_default( $input, OMMVS_Fields::OPTION_CTA_BUTTON_TEXT, $defaults );
+		$sanitized[ OMMVS_Fields::OPTION_CTA_BUTTON_URL ]           = $this->sanitize_cta_url( $input, $defaults );
+		$sanitized[ OMMVS_Fields::OPTION_MODAL_FALLBACK_THUMBNAIL ] = $this->sanitize_thumbnail_id( $input );
 
 		return $sanitized;
 
@@ -389,44 +311,6 @@ class OMMVS_Settings {
 		$value = isset( $input[ $key ] ) && is_scalar( $input[ $key ] ) ? sanitize_text_field( wp_unslash( $input[ $key ] ) ) : '';
 
 		return '' !== $value ? $value : $defaults[ $key ];
-
-	}
-
-	/**
-	 * Sanitize creative bullet rows.
-	 *
-	 * @since    1.0.0
-	 * @param    array    $input       Raw option input.
-	 * @param    array    $defaults    Default settings.
-	 * @return   array
-	 */
-	private function sanitize_creative_bullets( $input, $defaults ) {
-
-		if ( empty( $input[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ] ) || ! is_array( $input[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ] ) ) {
-			return $defaults[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ];
-		}
-
-		$bullets = array();
-
-		foreach ( $input[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ] as $bullet ) {
-			if ( ! is_scalar( $bullet ) ) {
-				continue;
-			}
-
-			$bullet = sanitize_text_field( wp_unslash( $bullet ) );
-
-			if ( '' === $bullet ) {
-				continue;
-			}
-
-			$bullets[] = $bullet;
-		}
-
-		if ( empty( $bullets ) ) {
-			return $defaults[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ];
-		}
-
-		return array_values( $bullets );
 
 	}
 

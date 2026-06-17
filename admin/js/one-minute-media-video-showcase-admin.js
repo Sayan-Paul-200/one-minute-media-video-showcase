@@ -131,58 +131,9 @@
 		frame.open();
 	}
 
-	function getSettingsRows( $repeatable ) {
-		return $repeatable.find( '[data-ommvs-settings-repeatable-rows]' ).children( '[data-ommvs-settings-repeatable-row]' );
-	}
-
-	function reindexSettingsRepeatable( $repeatable ) {
-		var fieldName = $repeatable.data( 'name' );
-
-		getSettingsRows( $repeatable ).each( function( index ) {
-			$( this ).find( '[name]' ).attr( 'name', fieldName + '[' + index + ']' );
-		} );
-	}
-
-	function initializeSettingsRepeatable( $repeatable ) {
-		var $rows = $repeatable.find( '[data-ommvs-settings-repeatable-rows]' );
-
-		if ( $.fn.sortable ) {
-			$rows.sortable( {
-				cancel: 'input,textarea,select,option',
-				handle: '[data-ommvs-settings-row-handle]',
-				items: '[data-ommvs-settings-repeatable-row]',
-				placeholder: 'ommvs-settings-repeatable__row--placeholder',
-				update: function() {
-					reindexSettingsRepeatable( $repeatable );
-				}
-			} );
-		}
-
-		reindexSettingsRepeatable( $repeatable );
-	}
-
-	function addSettingsRow( $repeatable ) {
-		var rowCount = getSettingsRows( $repeatable ).length;
-		var template = $.trim( $repeatable.find( '[data-ommvs-settings-row-template]' ).html() || '' );
-		var html;
-
-		if ( ! template ) {
-			return;
-		}
-
-		html = template.replace( /__index__/g, rowCount );
-		$repeatable.find( '[data-ommvs-settings-repeatable-rows]' ).append( html );
-
-		reindexSettingsRepeatable( $repeatable );
-	}
-
 	$( function() {
 		$( '[data-ommvs-placement-section]' ).each( function() {
 			initializeSection( $( this ) );
-		} );
-
-		$( '[data-ommvs-settings-repeatable]' ).each( function() {
-			initializeSettingsRepeatable( $( this ) );
 		} );
 
 		$( document ).on( 'click', '[data-ommvs-add-row]', function() {
@@ -203,17 +154,6 @@
 
 		$( document ).on( 'click', '[data-ommvs-remove-thumbnail]', function() {
 			clearThumbnail( $( this ).closest( '[data-ommvs-thumbnail]' ) );
-		} );
-
-		$( document ).on( 'click', '[data-ommvs-settings-add-row]', function() {
-			addSettingsRow( $( this ).closest( '[data-ommvs-settings-repeatable]' ) );
-		} );
-
-		$( document ).on( 'click', '[data-ommvs-settings-remove-row]', function() {
-			var $repeatable = $( this ).closest( '[data-ommvs-settings-repeatable]' );
-
-			$( this ).closest( '[data-ommvs-settings-repeatable-row]' ).remove();
-			reindexSettingsRepeatable( $repeatable );
 		} );
 	} );
 

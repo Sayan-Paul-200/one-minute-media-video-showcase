@@ -301,28 +301,12 @@ class OMMVS_Page_Data {
 	private static function get_settings_data(): array {
 
 		$settings     = OMMVS_Settings::get_settings();
-		$bullet_rows  = isset( $settings[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ] ) && is_array( $settings[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ] )
-			? $settings[ OMMVS_Fields::OPTION_CREATIVE_BULLETS ]
-			: array();
-		$bullets      = array();
 		$thumbnail_id = absint( $settings[ OMMVS_Fields::OPTION_MODAL_FALLBACK_THUMBNAIL ] ?? 0 );
 
-		foreach ( $bullet_rows as $bullet ) {
-			if ( ! is_scalar( $bullet ) ) {
-				continue;
-			}
-
-			$bullet = sanitize_text_field( (string) $bullet );
-
-			if ( '' !== $bullet ) {
-				$bullets[] = $bullet;
-			}
-		}
-
 		return array(
-			'productionOverviewLabel' => sanitize_text_field( (string) ( $settings[ OMMVS_Fields::OPTION_PRODUCTION_OVERVIEW_LABEL ] ?? '' ) ),
-			'creativeSectionTitle'    => sanitize_text_field( (string) ( $settings[ OMMVS_Fields::OPTION_CREATIVE_SECTION_TITLE ] ?? '' ) ),
-			'creativeBullets'         => array_values( $bullets ),
+			'productionOverviewLabel' => '',
+			'creativeSectionTitle'    => '',
+			'creativeBullets'         => array(),
 			'cta'                     => array(
 				'text' => sanitize_text_field( (string) ( $settings[ OMMVS_Fields::OPTION_CTA_BUTTON_TEXT ] ?? '' ) ),
 				'url'  => esc_url_raw( (string) ( $settings[ OMMVS_Fields::OPTION_CTA_BUTTON_URL ] ?? '' ) ),

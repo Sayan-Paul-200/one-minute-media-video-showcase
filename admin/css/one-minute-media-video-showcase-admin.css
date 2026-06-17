@@ -139,44 +139,6 @@
 	width: 220px;
 }
 
-.ommvs-settings-repeatable {
-	display: grid;
-	gap: 10px;
-	max-width: 680px;
-}
-
-.ommvs-settings-repeatable__rows {
-	display: grid;
-	gap: 8px;
-}
-
-.ommvs-settings-repeatable__row {
-	display: grid;
-	grid-template-columns: 32px minmax(220px, 1fr) auto;
-	gap: 10px;
-	align-items: center;
-}
-
-.ommvs-settings-repeatable__row--placeholder {
-	min-height: 36px;
-	border: 1px dashed #8c8f94;
-	background: #fff;
-}
-
-.ommvs-settings-repeatable__handle {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 32px;
-	height: 32px;
-	margin: 0;
-	padding: 0;
-	border: 1px solid #c3c4c7;
-	background: #fff;
-	color: #50575e;
-	cursor: move;
-}
-
 .ommvs-settings-thumbnail {
 	max-width: 420px;
 }
@@ -304,14 +266,12 @@
 @media (max-width: 782px) {
 	.ommvs-placement-section__header,
 	.ommvs-placement-row,
-	.ommvs-placement-row__fields,
-	.ommvs-settings-repeatable__row {
+	.ommvs-placement-row__fields {
 		display: grid;
 		grid-template-columns: 1fr;
 	}
 
-	.ommvs-placement-row__handle,
-	.ommvs-settings-repeatable__handle {
+	.ommvs-placement-row__handle {
 		width: 100%;
 	}
 

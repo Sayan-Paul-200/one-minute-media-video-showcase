@@ -82,12 +82,18 @@ class One_Minute_Media_Video_Showcase_Admin {
 			return;
 		}
 
+		$dependencies = array( 'jquery' );
+
+		if ( $this->is_page_edit_screen( $hook_suffix ) ) {
+			$dependencies[] = 'jquery-ui-sortable';
+		}
+
 		wp_enqueue_media();
 
 		wp_enqueue_script(
 			$this->plugin_name,
 			plugin_dir_url( __FILE__ ) . 'js/one-minute-media-video-showcase-admin.js',
-			array( 'jquery', 'jquery-ui-sortable' ),
+			$dependencies,
 			$this->version,
 			true
 		);
