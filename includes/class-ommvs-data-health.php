@@ -64,7 +64,6 @@ class OMMVS_Data_Health {
 			<?php $this->render_multiple_categories_section( $report['multiple_categories'] ); ?>
 			<?php $this->render_duplicate_hashes_section( $report['duplicate_hashes'] ); ?>
 			<?php $this->render_duplicate_placements_section( $report['duplicate_placements'] ); ?>
-			<?php $this->render_short_featured_section( $report['short_featured_pages'] ); ?>
 		</div>
 		<?php
 
@@ -85,7 +84,6 @@ class OMMVS_Data_Health {
 			'multiple_categories'  => $this->get_videos_with_multiple_categories( $video_posts ),
 			'duplicate_hashes'     => $this->get_duplicate_hashes( $video_posts ),
 			'duplicate_placements' => $this->get_duplicate_page_placements(),
-			'short_featured_pages' => $this->get_pages_with_short_featured_lists(),
 		);
 
 	}
@@ -321,38 +319,6 @@ class OMMVS_Data_Health {
 	}
 
 	/**
-	 * Find migrated pages with fewer Featured Videos than expected.
-	 *
-	 * @since    1.0.0
-	 * @return   array
-	 */
-	private function get_pages_with_short_featured_lists() {
-
-		$issues = array();
-		$pages  = $this->get_migrated_pages();
-
-		foreach ( $pages as $page ) {
-			$featured_ids = $this->get_page_placement_ids( $page->ID, OMMVS_Fields::META_FEATURED_VIDEOS );
-			$count        = count( $featured_ids );
-
-			if ( $count >= OMMVS_Fields::FEATURED_VIDEOS_MAX ) {
-				continue;
-			}
-
-			$issues[] = array(
-				'page_id'    => (int) $page->ID,
-				'page_title' => $this->get_post_admin_label( $page->ID, __( 'Page', 'one-minute-media-video-showcase' ) ),
-				'page_url'   => get_edit_post_link( $page->ID, '' ),
-				'count'      => $count,
-				'expected'   => (int) OMMVS_Fields::FEATURED_VIDEOS_MAX,
-			);
-		}
-
-		return $issues;
-
-	}
-
-	/**
 	 * Get pages that have OMMVS placement metadata.
 	 *
 	 * @since    1.0.0
@@ -430,7 +396,6 @@ class OMMVS_Data_Health {
 			$this->render_summary_item( __( 'Multiple categories', 'one-minute-media-video-showcase' ), count( $report['multiple_categories'] ) );
 			$this->render_summary_item( __( 'Duplicate hashes', 'one-minute-media-video-showcase' ), count( $report['duplicate_hashes'] ) );
 			$this->render_summary_item( __( 'Duplicate placements', 'one-minute-media-video-showcase' ), count( $report['duplicate_placements'] ) );
-			$this->render_summary_item( __( 'Short featured lists', 'one-minute-media-video-showcase' ), count( $report['short_featured_pages'] ) );
 			?>
 		</div>
 		<?php
@@ -615,50 +580,6 @@ class OMMVS_Data_Health {
 						<td><?php $this->render_edit_link( $issue['page_title'], $issue['page_url'] ); ?></td>
 						<td><?php $this->render_edit_link( $issue['video_title'], $issue['video_url'] ); ?></td>
 						<td><?php echo esc_html( implode( ', ', $issue['groups'] ) ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		<?php
-
-		$this->render_section_close();
-
-	}
-
-	/**
-	 * Render short Featured Videos section.
-	 *
-	 * @since    1.0.0
-	 * @param    array    $issues    Section issues.
-	 */
-	private function render_short_featured_section( $issues ) {
-
-		$this->render_section_open(
-			__( 'Pages With Fewer Than Expected Featured Videos', 'one-minute-media-video-showcase' ),
-			__( 'Only pages with existing OMMVS placements are scanned here.', 'one-minute-media-video-showcase' )
-		);
-
-		if ( empty( $issues ) ) {
-			$this->render_no_issues();
-			$this->render_section_close();
-			return;
-		}
-
-		?>
-		<table class="widefat striped ommvs-health-table">
-			<thead>
-				<tr>
-					<th><?php esc_html_e( 'Page', 'one-minute-media-video-showcase' ); ?></th>
-					<th><?php esc_html_e( 'Featured Videos', 'one-minute-media-video-showcase' ); ?></th>
-					<th><?php esc_html_e( 'Expected', 'one-minute-media-video-showcase' ); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ( $issues as $issue ) : ?>
-					<tr>
-						<td><?php $this->render_edit_link( $issue['page_title'], $issue['page_url'] ); ?></td>
-						<td><?php echo esc_html( (string) absint( $issue['count'] ) ); ?></td>
-						<td><?php echo esc_html( (string) absint( $issue['expected'] ) ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>

@@ -26,17 +26,30 @@
 		} );
 	}
 
-	function updateSectionState( $section, showLimitMessage ) {
-		var max = parseInt( $section.data( 'max' ), 10 ) || 0;
+	function updateSectionState( $section ) {
 		var rowCount = getRows( $section ).length;
-		var isAtMax = max > 0 && rowCount >= max;
-		var $addButton = $section.find( '[data-ommvs-add-row]' );
 
-		$addButton
-			.toggleClass( 'is-at-max', isAtMax )
-			.attr( 'aria-disabled', isAtMax ? 'true' : 'false' );
-		$section.find( '[data-ommvs-limit-message]' ).prop( 'hidden', ! ( showLimitMessage && isAtMax ) );
 		$section.find( '[data-ommvs-empty-message]' ).prop( 'hidden', rowCount > 0 );
+	}
+
+	function initializeVideoSelects( $context ) {
+		if ( ! $.fn.select2 ) {
+			return;
+		}
+
+		$context.find( '[data-ommvs-video-select]' ).each( function() {
+			var $select = $( this );
+
+			if ( $select.hasClass( 'select2-hidden-accessible' ) ) {
+				return;
+			}
+
+			$select.select2( {
+				allowClear: true,
+				placeholder: $select.find( 'option:first' ).text(),
+				width: '100%'
+			} );
+		} );
 	}
 
 	function initializeSection( $section ) {
@@ -50,13 +63,14 @@
 				placeholder: 'ommvs-placement-row--placeholder',
 				update: function() {
 					reindexSection( $section );
-					updateSectionState( $section, false );
+					updateSectionState( $section );
 				}
 			} );
 		}
 
 		reindexSection( $section );
-		updateSectionState( $section, false );
+		initializeVideoSelects( $section );
+		updateSectionState( $section );
 	}
 
 	function getTemplateHtml( $section ) {
@@ -64,15 +78,9 @@
 	}
 
 	function addRow( $section ) {
-		var max = parseInt( $section.data( 'max' ), 10 ) || 0;
 		var rowCount = getRows( $section ).length;
 		var template = getTemplateHtml( $section );
 		var html;
-
-		if ( max > 0 && rowCount >= max ) {
-			updateSectionState( $section, true );
-			return;
-		}
 
 		if ( ! template ) {
 			return;
@@ -82,7 +90,8 @@
 		$section.find( '[data-ommvs-rows]' ).append( html );
 
 		reindexSection( $section );
-		updateSectionState( $section, false );
+		initializeVideoSelects( $section );
+		updateSectionState( $section );
 	}
 
 	function setThumbnail( $thumbnail, attachment ) {
@@ -142,10 +151,15 @@
 
 		$( document ).on( 'click', '[data-ommvs-remove-row]', function() {
 			var $section = $( this ).closest( '[data-ommvs-placement-section]' );
+			var $row = $( this ).closest( '[data-ommvs-row]' );
 
-			$( this ).closest( '[data-ommvs-row]' ).remove();
+			if ( $.fn.select2 ) {
+				$row.find( '[data-ommvs-video-select].select2-hidden-accessible' ).select2( 'destroy' );
+			}
+
+			$row.remove();
 			reindexSection( $section );
-			updateSectionState( $section, false );
+			updateSectionState( $section );
 		} );
 
 		$( document ).on( 'click', '[data-ommvs-select-thumbnail]', function() {

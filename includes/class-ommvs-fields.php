@@ -39,7 +39,7 @@ class OMMVS_Fields {
 
 	const PLACEMENT_VIDEO = 'video';
 
-	const FEATURED_VIDEOS_MAX = 6;
+	const FEATURED_VIDEOS_MAX = 6; // Deprecated: retained for backward compatibility only.
 
 	const PAGE_PLACEMENTS_NONCE_ACTION = 'ommvs_save_page_placements';
 	const PAGE_PLACEMENTS_NONCE_NAME   = 'ommvs_page_placements_nonce';
@@ -928,7 +928,7 @@ class OMMVS_Fields {
 		wp_nonce_field( self::PAGE_PLACEMENTS_NONCE_ACTION, self::PAGE_PLACEMENTS_NONCE_NAME );
 
 		$video_options       = $this->get_video_options();
-		$featured_placements = $this->get_page_placements( $post->ID, self::META_FEATURED_VIDEOS, self::FEATURED_VIDEOS_MAX );
+		$featured_placements = $this->get_page_placements( $post->ID, self::META_FEATURED_VIDEOS );
 		$more_placements     = $this->get_page_placements( $post->ID, self::META_MORE_VIDEOS );
 
 		?>
@@ -937,10 +937,9 @@ class OMMVS_Fields {
 			$this->render_placement_section(
 				self::META_FEATURED_VIDEOS,
 				__( 'Featured Videos', 'one-minute-media-video-showcase' ),
-				__( 'Ordered source list for page-specific related videos. Maximum 6 videos.', 'one-minute-media-video-showcase' ),
+				__( 'Ordered source list for page-specific related videos.', 'one-minute-media-video-showcase' ),
 				$featured_placements,
-				$video_options,
-				self::FEATURED_VIDEOS_MAX
+				$video_options
 			);
 
 			$this->render_placement_section(
@@ -999,18 +998,7 @@ class OMMVS_Fields {
 			: array();
 		$notices      = array();
 
-		if ( $this->count_submitted_placement_rows( $raw_featured ) > self::FEATURED_VIDEOS_MAX ) {
-			$notices[] = array(
-				'type'    => 'warning',
-				'message' => sprintf(
-					/* translators: %d: maximum featured videos count. */
-					__( 'Featured Videos are limited to %d rows. Extra submitted rows were ignored.', 'one-minute-media-video-showcase' ),
-					(int) self::FEATURED_VIDEOS_MAX
-				),
-			);
-		}
-
-		$featured_placements = $this->sanitize_placement_rows( $raw_featured, self::FEATURED_VIDEOS_MAX );
+		$featured_placements = $this->sanitize_placement_rows( $raw_featured );
 		$more_placements     = $this->sanitize_placement_rows( $raw_more );
 		$validated           = $this->validate_page_placements( $featured_placements, $more_placements, $notices );
 
@@ -1144,18 +1132,6 @@ class OMMVS_Fields {
 			);
 		}
 
-		if ( ( ! empty( $featured_placements ) || ! empty( $more_placements ) ) && count( $featured_placements ) < self::FEATURED_VIDEOS_MAX ) {
-			$notices[] = array(
-				'type'    => 'warning',
-				'message' => sprintf(
-					/* translators: 1: current featured videos count, 2: expected featured videos count. */
-					__( 'This page has %1$d Featured Videos. The design expects %2$d where possible.', 'one-minute-media-video-showcase' ),
-					count( $featured_placements ),
-					(int) self::FEATURED_VIDEOS_MAX
-				),
-			);
-		}
-
 		return array(
 			'featured' => array_values( $featured_placements ),
 			'more'     => array_values( $more_placements ),
@@ -1216,31 +1192,6 @@ class OMMVS_Fields {
 	}
 
 	/**
-	 * Count submitted placement rows that include a selected video ID.
-	 *
-	 * @since    1.0.0
-	 * @param    array    $rows    Raw submitted rows.
-	 * @return   int
-	 */
-	private function count_submitted_placement_rows( $rows ) {
-
-		if ( ! is_array( $rows ) ) {
-			return 0;
-		}
-
-		$count = 0;
-
-		foreach ( $rows as $row ) {
-			if ( is_array( $row ) && ! empty( $row[ self::PLACEMENT_VIDEO ] ) ) {
-				$count++;
-			}
-		}
-
-		return $count;
-
-	}
-
-	/**
 	 * Store page placement notices for display after redirect.
 	 *
 	 * @since    1.0.0
@@ -1279,10 +1230,9 @@ class OMMVS_Fields {
 	 * @since    1.0.0
 	 * @param    int       $post_id    Page post ID.
 	 * @param    string    $meta_key   Placement meta key.
-	 * @param    int       $limit      Optional max row count.
 	 * @return   array
 	 */
-	private function get_page_placements( $post_id, $meta_key, $limit = 0 ) {
+	private function get_page_placements( $post_id, $meta_key ) {
 
 		$placements = get_post_meta( $post_id, $meta_key, true );
 
@@ -1290,7 +1240,7 @@ class OMMVS_Fields {
 			return array();
 		}
 
-		return $this->sanitize_placement_rows( $placements, $limit );
+		return $this->sanitize_placement_rows( $placements );
 
 	}
 
@@ -1345,12 +1295,11 @@ class OMMVS_Fields {
 	 * @param    string    $description   Section description.
 	 * @param    array     $placements    Existing placement rows.
 	 * @param    array     $video_options Video selector options.
-	 * @param    int       $max_rows      Optional max row count.
 	 */
-	private function render_placement_section( $meta_key, $title, $description, $placements, $video_options, $max_rows = 0 ) {
+	private function render_placement_section( $meta_key, $title, $description, $placements, $video_options ) {
 
 		?>
-		<section class="ommvs-placement-section" data-ommvs-placement-section data-meta-key="<?php echo esc_attr( $meta_key ); ?>" data-max="<?php echo esc_attr( $max_rows ); ?>">
+		<section class="ommvs-placement-section" data-ommvs-placement-section data-meta-key="<?php echo esc_attr( $meta_key ); ?>">
 			<div class="ommvs-placement-section__header">
 				<div>
 					<h3><?php echo esc_html( $title ); ?></h3>
@@ -1359,16 +1308,6 @@ class OMMVS_Fields {
 				<button type="button" class="button button-secondary ommvs-placement-section__add" data-ommvs-add-row>
 					<?php esc_html_e( 'Add Video', 'one-minute-media-video-showcase' ); ?>
 				</button>
-			</div>
-
-			<div class="ommvs-placement-section__limit" data-ommvs-limit-message hidden>
-				<?php
-				printf(
-					/* translators: %d: maximum featured videos count. */
-					esc_html__( 'Featured Videos are limited to %d rows.', 'one-minute-media-video-showcase' ),
-					(int) self::FEATURED_VIDEOS_MAX
-				);
-				?>
 			</div>
 
 			<div class="ommvs-placement-rows" data-ommvs-rows>
@@ -1441,10 +1380,9 @@ class OMMVS_Fields {
 	 *
 	 * @since    1.0.0
 	 * @param    array    $rows     Raw rows.
-	 * @param    int      $limit    Optional max row count.
 	 * @return   array
 	 */
-	private function sanitize_placement_rows( $rows, $limit = 0 ) {
+	private function sanitize_placement_rows( $rows ) {
 
 		if ( ! is_array( $rows ) ) {
 			return array();
@@ -1467,9 +1405,6 @@ class OMMVS_Fields {
 				self::PLACEMENT_VIDEO => $video_id,
 			);
 
-			if ( $limit > 0 && count( $sanitized_rows ) >= $limit ) {
-				break;
-			}
 		}
 
 		return array_values( $sanitized_rows );

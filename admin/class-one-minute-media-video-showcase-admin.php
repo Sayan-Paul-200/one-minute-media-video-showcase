@@ -66,6 +66,10 @@ class One_Minute_Media_Video_Showcase_Admin {
 			return;
 		}
 
+		if ( $this->is_page_edit_screen( $hook_suffix ) ) {
+			wp_enqueue_style( $this->plugin_name . '-select2', plugin_dir_url( __FILE__ ) . 'vendor/select2/select2.min.css', array(), '4.1.0-rc.0', 'all' );
+		}
+
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/one-minute-media-video-showcase-admin.css', array(), $this->version, 'all' );
 
 	}
@@ -85,7 +89,16 @@ class One_Minute_Media_Video_Showcase_Admin {
 		$dependencies = array( 'jquery' );
 
 		if ( $this->is_page_edit_screen( $hook_suffix ) ) {
+			wp_enqueue_script(
+				$this->plugin_name . '-select2',
+				plugin_dir_url( __FILE__ ) . 'vendor/select2/select2.min.js',
+				array( 'jquery' ),
+				'4.1.0-rc.0',
+				true
+			);
+
 			$dependencies[] = 'jquery-ui-sortable';
+			$dependencies[] = $this->plugin_name . '-select2';
 		}
 
 		wp_enqueue_media();
@@ -102,11 +115,9 @@ class One_Minute_Media_Video_Showcase_Admin {
 			$this->plugin_name,
 			'ommvsAdmin',
 			array(
-				'featuredMax' => class_exists( 'OMMVS_Fields' ) ? OMMVS_Fields::FEATURED_VIDEOS_MAX : 6,
-				'strings'     => array(
+				'strings' => array(
 					'chooseThumbnail' => __( 'Choose Thumbnail', 'one-minute-media-video-showcase' ),
 					'useThumbnail'    => __( 'Use Thumbnail', 'one-minute-media-video-showcase' ),
-					'maxFeatured'     => __( 'Featured Videos are limited to 6 rows.', 'one-minute-media-video-showcase' ),
 				),
 			)
 		);

@@ -42,7 +42,7 @@ class OMMVS_Page_Data {
 		$featured_ids   = self::get_placement_video_ids(
 			$page_id,
 			OMMVS_Fields::META_FEATURED_VIDEOS,
-			OMMVS_Fields::FEATURED_VIDEOS_MAX,
+			0,
 			$seen_video_ids
 		);
 		$more_ids       = self::get_placement_video_ids(

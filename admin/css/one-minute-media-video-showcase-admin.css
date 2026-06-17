@@ -26,14 +26,6 @@
 	color: #646970;
 }
 
-.ommvs-placement-section__limit {
-	margin: 0 0 12px;
-	padding: 8px 10px;
-	border-left: 4px solid #d63638;
-	background: #fcf0f1;
-	color: #8a2424;
-}
-
 .ommvs-placement-section__empty {
 	margin: 12px 0 0;
 	color: #646970;
@@ -97,6 +89,25 @@
 .ommvs-placement-field textarea {
 	width: 100%;
 	max-width: 100%;
+}
+
+.ommvs-placement-field .select2-container {
+	width: 100% !important;
+	max-width: 100%;
+}
+
+.ommvs-placement-field .select2-container--default .select2-selection--single {
+	min-height: 36px;
+	border-color: #8c8f94;
+	border-radius: 0;
+}
+
+.ommvs-placement-field .select2-container--default .select2-selection--single .select2-selection__rendered {
+	line-height: 34px;
+}
+
+.ommvs-placement-field .select2-container--default .select2-selection--single .select2-selection__arrow {
+	height: 34px;
 }
 
 .ommvs-placement-field--video,
