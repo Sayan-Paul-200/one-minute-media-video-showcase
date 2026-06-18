@@ -11,7 +11,7 @@ V3 is a focused correction layer after successful V2 testing. It should be compl
 Current branch:
 
 ```text
-feature/ommvs-v2-client-requirements
+feature/ommvs-v3-client-feedback
 ```
 
 Current observed implementation:
@@ -398,4 +398,3 @@ Frontend:
 6. V3-6 Regression.
 
 This order fixes editor-authored content first, then admin selection safety, then widget/frontend polish, then the direct-hash performance risk.
-
