@@ -112,10 +112,51 @@ class OMMVS_Assets {
 		wp_register_script(
 			self::PUBLIC_SCRIPT_HANDLE,
 			self::get_asset_url( 'public/js/one-minute-media-video-showcase-public.js' ),
-			array( 'jquery' ),
+			array(),
 			self::get_version(),
 			true
 		);
+
+	}
+
+	/**
+	 * Add scoped optimization hints to the public modal controller script tag.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $tag       Script tag HTML.
+	 * @param    string    $handle    Script handle.
+	 * @param    string    $src       Script source URL.
+	 * @return   string
+	 */
+	public function add_public_script_attributes( $tag, $handle, $src ) {
+
+		if ( self::PUBLIC_SCRIPT_HANDLE !== $handle ) {
+			return $tag;
+		}
+
+		$attribute_string = '';
+		$attributes       = array(
+			'data-cfasync'       => 'false',
+			'data-no-defer'      => '1',
+			'data-no-delay'      => '1',
+			'data-ommvs-critical' => 'modal-controller',
+		);
+
+		foreach ( $attributes as $name => $value ) {
+			if ( false === strpos( $tag, ' ' . $name . '=' ) ) {
+				$attribute_string .= sprintf( ' %s="%s"', esc_attr( $name ), esc_attr( $value ) );
+			}
+		}
+
+		if ( '' === $attribute_string ) {
+			return $tag;
+		}
+
+		if ( false !== strpos( $tag, '<script ' ) ) {
+			return preg_replace( '/<script\s+/', '<script' . $attribute_string . ' ', $tag, 1 );
+		}
+
+		return preg_replace( '/<script\b/', '<script' . $attribute_string, $tag, 1 );
 
 	}
 

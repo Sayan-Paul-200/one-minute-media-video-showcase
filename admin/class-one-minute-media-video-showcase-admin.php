@@ -101,7 +101,9 @@ class One_Minute_Media_Video_Showcase_Admin {
 			$dependencies[] = $this->plugin_name . '-select2';
 		}
 
-		wp_enqueue_media();
+		if ( $this->is_page_edit_screen( $hook_suffix ) || $this->is_settings_screen( $hook_suffix ) || $this->is_video_case_study_fallback_edit_screen( $hook_suffix ) ) {
+			wp_enqueue_media();
+		}
 
 		wp_enqueue_script(
 			$this->plugin_name,
@@ -116,9 +118,14 @@ class One_Minute_Media_Video_Showcase_Admin {
 			'ommvsAdmin',
 			array(
 				'strings' => array(
-					'chooseThumbnail' => __( 'Choose Thumbnail', 'one-minute-media-video-showcase' ),
-					'useThumbnail'    => __( 'Use Thumbnail', 'one-minute-media-video-showcase' ),
+					'addingCategory'       => __( 'Adding category...', 'one-minute-media-video-showcase' ),
+					'categoryAddFailed'    => __( 'Could not add the category. Please try again.', 'one-minute-media-video-showcase' ),
+					'categoryNameRequired' => __( 'Enter a category name first.', 'one-minute-media-video-showcase' ),
+					'chooseThumbnail'      => __( 'Choose Thumbnail', 'one-minute-media-video-showcase' ),
+					'useThumbnail'         => __( 'Use Thumbnail', 'one-minute-media-video-showcase' ),
 				),
+				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
+				'videoCategoryNonce' => class_exists( 'OMMVS_Taxonomy_Video_Category' ) ? wp_create_nonce( OMMVS_Taxonomy_Video_Category::ADD_NONCE_ACTION ) : '',
 			)
 		);
 
@@ -137,6 +144,7 @@ class One_Minute_Media_Video_Showcase_Admin {
 			|| $this->is_settings_screen( $hook_suffix )
 			|| $this->is_data_health_screen( $hook_suffix )
 			|| $this->is_video_case_study_list_screen( $hook_suffix )
+			|| $this->is_video_case_study_edit_screen( $hook_suffix )
 			|| $this->is_video_case_study_fallback_edit_screen( $hook_suffix );
 
 	}
@@ -152,6 +160,7 @@ class One_Minute_Media_Video_Showcase_Admin {
 
 		return $this->is_page_edit_screen( $hook_suffix )
 			|| $this->is_settings_screen( $hook_suffix )
+			|| $this->is_video_case_study_edit_screen( $hook_suffix )
 			|| $this->is_video_case_study_fallback_edit_screen( $hook_suffix );
 
 	}
@@ -208,6 +217,35 @@ class One_Minute_Media_Video_Showcase_Admin {
 	private function is_data_health_screen( $hook_suffix ) {
 
 		return 'video_case_study_page_ommvs-data-health' === $hook_suffix;
+
+	}
+
+	/**
+	 * Determine whether the current screen is a Video Case Study edit screen.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $hook_suffix    The current admin page hook suffix.
+	 * @return   bool
+	 */
+	private function is_video_case_study_edit_screen( $hook_suffix ) {
+
+		if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) ) {
+			return false;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+		if ( $screen && 'video_case_study' === $screen->post_type ) {
+			return true;
+		}
+
+		if ( isset( $_GET['post_type'] ) && 'video_case_study' === sanitize_key( wp_unslash( $_GET['post_type'] ) ) ) {
+			return true;
+		}
+
+		$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+
+		return $post_id && 'video_case_study' === get_post_type( $post_id );
 
 	}
 

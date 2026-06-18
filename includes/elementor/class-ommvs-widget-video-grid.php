@@ -91,7 +91,7 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 	 */
 	public function get_script_depends() {
 
-		return class_exists( 'OMMVS_Assets' ) ? array( OMMVS_Assets::get_public_script_handle() ) : array();
+		return array();
 
 	}
 
@@ -118,6 +118,25 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 		$settings = $this->get_settings_for_display();
 		$source   = $this->get_grid_source( $settings );
 		$page_id  = $this->get_current_page_id();
+		$data     = class_exists( 'OMMVS_Page_Data' ) ? OMMVS_Page_Data::get_page_data( $page_id ) : array();
+		$ids      = $this->get_source_ids( $data, $source );
+		$videos   = isset( $data['videos'] ) && is_array( $data['videos'] ) ? $data['videos'] : array();
+		$ids      = $this->get_renderable_ids( $ids, $videos );
+
+		$this->add_render_attribute( 'grid', 'class', 'ommvs-video-grid' );
+		$this->add_render_attribute( 'grid', 'data-ommvs-video-grid', '' );
+		$this->add_render_attribute( 'grid', 'data-ommvs-source', $source );
+
+		if ( empty( $ids ) ) {
+			if ( ! $this->should_render_empty_message( $page_id ) ) {
+				return;
+			}
+
+			echo '<div ' . $this->get_render_attribute_string( 'grid' ) . '>';
+			$this->render_empty_message( $settings );
+			echo '</div>';
+			return;
+		}
 
 		if ( class_exists( 'OMMVS_Modal_Renderer' ) ) {
 			OMMVS_Modal_Renderer::mark_required( $page_id );
@@ -125,21 +144,7 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 			OMMVS_Assets::enqueue_public_assets();
 		}
 
-		$data     = class_exists( 'OMMVS_Page_Data' ) ? OMMVS_Page_Data::get_page_data( $page_id ) : array();
-		$ids      = $this->get_source_ids( $data, $source );
-		$videos   = isset( $data['videos'] ) && is_array( $data['videos'] ) ? $data['videos'] : array();
-
-		$this->add_render_attribute( 'grid', 'class', 'ommvs-video-grid' );
-		$this->add_render_attribute( 'grid', 'data-ommvs-video-grid', '' );
-		$this->add_render_attribute( 'grid', 'data-ommvs-source', $source );
-
 		echo '<div ' . $this->get_render_attribute_string( 'grid' ) . '>';
-
-		if ( empty( $ids ) ) {
-			$this->render_empty_message( $settings );
-			echo '</div>';
-			return;
-		}
 
 		foreach ( $ids as $video_id ) {
 			$video_key = (string) absint( $video_id );
@@ -305,7 +310,8 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 					'unit' => 'px',
 				),
 				'selectors'  => array(
-					'{{WRAPPER}} .ommvs-video-card, {{WRAPPER}} .ommvs-video-card__media' => 'border-radius: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .ommvs-video-card' => 'border-radius: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .ommvs-video-card__media' => 'border-radius: {{SIZE}}{{UNIT}} {{SIZE}}{{UNIT}} 0 0;',
 				),
 			)
 		);
@@ -363,6 +369,33 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 	}
 
 	/**
+	 * Keep only source IDs that have normalized video data available.
+	 *
+	 * @since    1.0.0
+	 * @param    array    $ids       Source video IDs.
+	 * @param    array    $videos    Normalized videos keyed by ID.
+	 * @return   array
+	 */
+	private function get_renderable_ids( array $ids, array $videos ) {
+
+		$renderable_ids = array();
+
+		foreach ( $ids as $video_id ) {
+			$video_id  = absint( $video_id );
+			$video_key = (string) $video_id;
+
+			if ( ! $video_id || empty( $videos[ $video_key ] ) || ! is_array( $videos[ $video_key ] ) ) {
+				continue;
+			}
+
+			$renderable_ids[] = $video_id;
+		}
+
+		return $renderable_ids;
+
+	}
+
+	/**
 	 * Get the current page ID for frontend/editor rendering.
 	 *
 	 * @since    1.0.0
@@ -395,6 +428,52 @@ class OMMVS_Widget_Video_Grid extends Widget_Base {
 		}
 
 		return 0;
+
+	}
+
+	/**
+	 * Determine whether empty widget messaging should render.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $page_id    Current page ID.
+	 * @return   bool
+	 */
+	private function should_render_empty_message( $page_id ) {
+
+		return $this->is_editor_context() || $this->can_current_user_edit_page( $page_id );
+
+	}
+
+	/**
+	 * Determine whether the widget is rendering inside Elementor edit mode.
+	 *
+	 * @since    1.0.0
+	 * @return   bool
+	 */
+	private function is_editor_context() {
+
+		if ( ! class_exists( '\Elementor\Plugin' ) || ! isset( \Elementor\Plugin::$instance->editor ) ) {
+			return false;
+		}
+
+		$editor = \Elementor\Plugin::$instance->editor;
+
+		return is_object( $editor ) && method_exists( $editor, 'is_edit_mode' ) && $editor->is_edit_mode();
+
+	}
+
+	/**
+	 * Determine whether the current user can edit the page being rendered.
+	 *
+	 * @since    1.0.0
+	 * @param    int    $page_id    Current page ID.
+	 * @return   bool
+	 */
+	private function can_current_user_edit_page( $page_id ) {
+
+		$page_id = absint( $page_id );
+
+		return $page_id && current_user_can( 'edit_post', $page_id );
 
 	}
 

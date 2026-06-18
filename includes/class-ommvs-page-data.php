@@ -159,7 +159,7 @@ class OMMVS_Page_Data {
 
 		$card_thumbnail_id    = absint( get_post_meta( $video_id, OMMVS_Fields::FIELD_CARD_THUMBNAIL, true ) );
 		$related_thumbnail_id = absint( get_post_meta( $video_id, OMMVS_Fields::FIELD_RELATED_THUMBNAIL, true ) );
-		$modal_content        = wp_kses_post( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_CONTENT, true ) );
+		$modal_content        = self::format_modal_content( get_post_meta( $video_id, OMMVS_Fields::FIELD_MODAL_CONTENT, true ) );
 		$stored_video_url     = esc_url_raw( (string) get_post_meta( $video_id, OMMVS_Fields::FIELD_VIDEO_URL, true ) );
 		$vimeo_url            = OMMVS_Fields::is_valid_vimeo_url( $stored_video_url ) ? $stored_video_url : '';
 		$vimeo_id             = OMMVS_Fields::get_vimeo_video_id_from_url( $vimeo_url );
@@ -195,6 +195,32 @@ class OMMVS_Page_Data {
 				'thumbnail' => self::get_attachment_data( $related_thumbnail_id, 'medium' ),
 			),
 		);
+
+	}
+
+	/**
+	 * Format admin-authored Modal Content for safe frontend rendering.
+	 *
+	 * @since    1.0.0
+	 * @param    mixed    $content    Raw Modal Content meta value.
+	 * @return   string
+	 */
+	private static function format_modal_content( $content ) {
+
+		$content = is_scalar( $content ) ? trim( (string) $content ) : '';
+
+		if ( '' === $content ) {
+			return '';
+		}
+
+		$content = wp_kses_post( $content );
+		$content = wpautop( $content );
+
+		if ( function_exists( 'shortcode_unautop' ) ) {
+			$content = shortcode_unautop( $content );
+		}
+
+		return wp_kses_post( $content );
 
 	}
 

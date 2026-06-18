@@ -9,6 +9,10 @@
 	var scrollPosition = 0;
 	var originalBodyStyles = {};
 	var previousScrollRestoration = null;
+	var debugEnabled = isDebugEnabled();
+	var performanceMarks = {};
+
+	markPerformance( 'controller-load' );
 
 	function onReady( callback ) {
 		if ( 'loading' === document.readyState ) {
@@ -20,6 +24,8 @@
 	}
 
 	function init() {
+		markPerformance( 'init-start' );
+
 		pageData = parsePageData();
 
 		if ( ! pageData ) {
@@ -185,6 +191,8 @@
 			return;
 		}
 
+		markPerformance( 'initial-hash-detected' );
+
 		window.setTimeout( function() {
 			openModal( videoId, {
 				updateHash: false,
@@ -210,10 +218,12 @@
 
 		activeVideoId = parseVideoId( video.id );
 
+		markPerformance( 'modal-render-start' );
 		renderModal( video );
 
 		isOpen = true;
 		setModalOpenState( true );
+		markPerformance( 'modal-open-state-applied' );
 
 		if ( false !== options.updateHash ) {
 			setHash( video.hash, wasOpen );
@@ -298,6 +308,7 @@
 
 		if ( iframe ) {
 			modal.video.appendChild( iframe );
+			markPerformance( 'iframe-appended' );
 		}
 	}
 
@@ -846,6 +857,55 @@
 
 	function isScalar( value ) {
 		return 'string' === typeof value || 'number' === typeof value || 'boolean' === typeof value;
+	}
+
+	function isDebugEnabled() {
+		if ( true === window.ommvsDebug ) {
+			return true;
+		}
+
+		if ( ! window.location || ! window.location.search ) {
+			return false;
+		}
+
+		try {
+			return '1' === new URLSearchParams( window.location.search ).get( 'ommvs_debug' );
+		} catch ( error ) {
+			return /(?:^\?|&)ommvs_debug=1(?:&|$)/.test( window.location.search );
+		}
+	}
+
+	function getPerformanceNow() {
+		if ( window.performance && 'function' === typeof window.performance.now ) {
+			return window.performance.now();
+		}
+
+		return Date.now();
+	}
+
+	function markPerformance( name ) {
+		var time = 0;
+		var delta = 0;
+
+		if ( ! debugEnabled ) {
+			return;
+		}
+
+		time = getPerformanceNow();
+		performanceMarks[ name ] = time;
+		delta = performanceMarks[ 'controller-load' ] ? Math.round( time - performanceMarks[ 'controller-load' ] ) : 0;
+
+		if ( window.performance && 'function' === typeof window.performance.mark ) {
+			try {
+				window.performance.mark( 'ommvs:' + name );
+			} catch ( error ) {
+				// Browser performance marks are diagnostic only.
+			}
+		}
+
+		if ( window.console && 'function' === typeof window.console.debug ) {
+			window.console.debug( '[OMMVS]', name, delta + 'ms' );
+		}
 	}
 
 	onReady( init );

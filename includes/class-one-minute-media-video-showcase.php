@@ -229,6 +229,8 @@ class One_Minute_Media_Video_Showcase {
 		$plugin_taxonomy_video_category = new OMMVS_Taxonomy_Video_Category();
 
 		$this->loader->add_action( 'init', $plugin_taxonomy_video_category, 'register_taxonomy', 11 );
+		$this->loader->add_action( 'save_post_video_case_study', $plugin_taxonomy_video_category, 'save_single_category', 10, 2 );
+		$this->loader->add_action( 'wp_ajax_ommvs_add_video_category', $plugin_taxonomy_video_category, 'ajax_add_category' );
 
 	}
 
@@ -310,6 +312,7 @@ class One_Minute_Media_Video_Showcase {
 		$plugin_assets = new OMMVS_Assets();
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_assets, 'register_public_assets' );
+		$this->loader->add_filter( 'script_loader_tag', $plugin_assets, 'add_public_script_attributes', 10, 3 );
 
 	}
 

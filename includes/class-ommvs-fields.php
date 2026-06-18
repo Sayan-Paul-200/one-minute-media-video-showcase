@@ -1266,21 +1266,37 @@ class OMMVS_Fields {
 		$options = array();
 
 		foreach ( $video_posts as $video_post ) {
-			$title = get_the_title( $video_post );
+			$post_title = get_the_title( $video_post );
+			$card_title = sanitize_text_field( (string) get_post_meta( $video_post->ID, self::FIELD_CARD_TITLE, true ) );
+			$title      = '' !== trim( $card_title ) ? $card_title : $post_title;
 
 			if ( '' === trim( $title ) ) {
 				$title = sprintf(
 					/* translators: %d: video post ID. */
-					__( '(no title) #%d', 'one-minute-media-video-showcase' ),
+					__( 'Video #%d', 'one-minute-media-video-showcase' ),
 					$video_post->ID
 				);
 			}
 
 			$options[] = array(
-				'id'    => (int) $video_post->ID,
-				'title' => $title,
+				'id'         => (int) $video_post->ID,
+				'title'      => $title,
+				'post_title' => $post_title,
 			);
 		}
+
+		usort(
+			$options,
+			static function ( $first_option, $second_option ) {
+				$title_compare = strcasecmp( (string) $first_option['title'], (string) $second_option['title'] );
+
+				if ( 0 !== $title_compare ) {
+					return $title_compare;
+				}
+
+				return absint( $first_option['id'] ?? 0 ) <=> absint( $second_option['id'] ?? 0 );
+			}
+		);
 
 		return $options;
 
@@ -1359,7 +1375,7 @@ class OMMVS_Fields {
 							<option value="" disabled><?php esc_html_e( 'No Video Case Studies found', 'one-minute-media-video-showcase' ); ?></option>
 						<?php endif; ?>
 						<?php foreach ( $video_options as $video_option ) : ?>
-							<option value="<?php echo esc_attr( $video_option['id'] ); ?>" <?php selected( $video_id, $video_option['id'] ); ?>>
+							<option value="<?php echo esc_attr( $video_option['id'] ); ?>" data-ommvs-post-title="<?php echo esc_attr( $video_option['post_title'] ); ?>" <?php selected( $video_id, $video_option['id'] ); ?>>
 								<?php echo esc_html( $video_option['title'] ); ?>
 							</option>
 						<?php endforeach; ?>
