@@ -90,6 +90,21 @@ Current Video CPT fields:
 
 ACF is optional. When ACF is active, it renders the primary Video CPT field UI. When ACF is inactive, the plugin renders fallback fields.
 
+### ACF-Active UI Reference Observations
+
+The V4 reference screenshot of a Video Case Study edit screen with ACF active shows the current editor experience clearly:
+
+- The edit screen works, but the main `Video Showcase Details` ACF box is one long vertical stack.
+- Card fields, modal fields, video-source fields, optional related-card media, and migration notes all appear in the same uninterrupted flow.
+- Required fields are marked, but the editor does not get a quick sense of which fields belong together.
+- `Default Card Thumbnail` appears in the main ACF box, while native WordPress `Featured image` appears in the sidebar. This can confuse editors because both look image-related, but the plugin frontend uses the plugin-owned Default Card Thumbnail field.
+- `Modal Content` has a useful rich-text editor, but it is buried in the middle of the long stack and can feel heavy inside the same flat field group.
+- `Vimeo Video URL`, `Related Thumbnail Override`, and `Admin Notes` appear after Modal Content, but there is no visual separation between required production data and optional/editorial data.
+- The custom `Video Categories` sidebar metabox is functionally correct after V3, but it should visually align with the polished V4 admin direction and must never overflow the sidebar.
+- The standard `Publish`, `Video Case Study Attributes`, and `Featured image` boxes remain visible in the sidebar.
+
+V4 should therefore prioritize structure and guidance over adding more raw fields. The first visible improvement should be grouping and readability, not a new data model.
+
 ### `OMMVS_Taxonomy_Video_Category`
 
 File:
@@ -270,6 +285,8 @@ Recommended Video Case Study edit structure:
 2. Decide exact helper copy and labels.
 3. Decide if ACF fields should use tabs, accordions, or plain grouped fields.
 4. Define fallback UI section order to match ACF UI.
+5. Decide how to explain the difference between plugin-owned Default Card Thumbnail and native WordPress Featured Image.
+6. Decide whether native Featured Image should remain visible as an admin convenience or be hidden from the Video CPT edit screen in a later phase.
 
 ### Acceptance Criteria
 
@@ -301,21 +318,29 @@ admin/js/one-minute-media-video-showcase-admin.js
    - Tabs or grouping fields where supported.
    - Clear section labels.
    - Better field instructions.
+   - Avoid the current single long stack shown in the V4 reference screenshot.
 2. Use field wrappers to create cleaner two-column layouts where appropriate:
    - Hash Slug and Active.
    - Card Title and Card Description.
    - Card Thumbnail and Related Thumbnail Override.
+   - Vimeo Video URL and detected/preview helper text if V4-5 is implemented.
 3. Improve Modal Content instructions:
    - Tell editors to use normal headings, paragraphs, and lists.
    - Avoid pasted Elementor markup.
+   - Keep the editor large enough to use comfortably without making the full field group feel endless.
 4. Improve Vimeo Video URL instructions:
    - Show accepted examples.
    - Mention only Vimeo URLs are accepted.
-5. Add CSS scoped to the ACF field group on Video CPT edit screens:
+5. Add a clear thumbnail usage note:
+   - Default Card Thumbnail is the frontend card thumbnail.
+   - Native Featured Image is optional/admin-facing unless a future phase explicitly syncs or hides it.
+6. Add CSS scoped to the ACF field group on Video CPT edit screens:
    - Better spacing.
    - Softer section separation.
    - Cleaner media previews.
    - More readable instruction text.
+   - Better handling of large ACF WYSIWYG fields inside the main column.
+   - Sidebar-safe styling for the Video Categories metabox.
 
 ### Boundaries
 
@@ -327,6 +352,9 @@ admin/js/one-minute-media-video-showcase-admin.js
 ### Acceptance Criteria
 
 - With ACF active, the Video Case Study editor feels organized and guided.
+- The ACF field group no longer feels like one long undifferentiated list.
+- Editors can quickly distinguish Card Content, Modal Content, Video Source, and optional/admin fields.
+- Editors understand that Default Card Thumbnail is the frontend thumbnail field.
 - Fields still save to the same keys.
 - ACF validation still rejects non-Vimeo URLs.
 - Video Category single-select metabox still works.
