@@ -166,16 +166,260 @@
 		return settings.strings && settings.strings[ key ] ? settings.strings[ key ] : fallback;
 	}
 
-	function setVideoCategoryStatus( $metabox, message, isError ) {
+	function formatAdminString( key, fallback, value ) {
+		return getAdminString( key, fallback ).replace( '%s', value );
+	}
+
+	function getHintTarget( $element ) {
+		var $target = $element.closest( '.acf-input, .ommvs-video-fallback-field__control' ).first();
+
+		return $target.length ? $target : $element.parent();
+	}
+
+	function ensureInlineHint( $element, key ) {
+		var $target = getHintTarget( $element );
+		var selector = '[data-ommvs-inline-hint="' + key + '"]';
+		var $hint = $target.find( selector ).first();
+
+		if ( $hint.length ) {
+			return $hint;
+		}
+
+		$hint = $( '<div />', {
+			'aria-live': 'polite',
+			'class': 'ommvs-admin-inline-hint ommvs-admin-inline-hint--neutral',
+			'data-ommvs-inline-hint': key,
+			'role': 'status'
+		} );
+
+		$target.append( $hint );
+
+		return $hint;
+	}
+
+	function setInlineHint( $hint, type, message ) {
+		$hint
+			.removeClass( 'ommvs-admin-inline-hint--neutral ommvs-admin-inline-hint--success ommvs-admin-inline-hint--warning' )
+			.addClass( 'ommvs-admin-inline-hint--' + type )
+			.text( message || '' );
+	}
+
+	function getNormalizedHashSlug( value ) {
+		return $.trim( String( value || '' ) ).replace( /^#+/, '' );
+	}
+
+	function updateHashHint( $input, $hint ) {
+		var rawValue = $.trim( String( $input.val() || '' ) );
+		var hashSlug = getNormalizedHashSlug( rawValue );
+
+		if ( '' === rawValue ) {
+			setInlineHint( $hint, 'neutral', getAdminString( 'hashPreviewEmpty', 'Enter a hash slug to preview its frontend URL hash.' ) );
+			return;
+		}
+
+		if ( '#' === rawValue.charAt( 0 ) ) {
+			setInlineHint(
+				$hint,
+				'warning',
+				formatAdminString( 'hashLeadingHashWarning', 'Store this as "%s" without the leading #. The plugin will still open #hash URLs on the frontend.', hashSlug || rawValue )
+			);
+			return;
+		}
+
+		setInlineHint(
+			$hint,
+			'success',
+			formatAdminString( 'hashPreview', 'Frontend hash preview: #%s', hashSlug )
+		);
+	}
+
+	function initializeHashHints() {
+		$( '.ommvs-acf-field--hash-slug input, .ommvs-video-fallback-field--ommvs-hash-slug input' ).each( function() {
+			var $input = $( this );
+			var $hint;
+
+			if ( $input.data( 'ommvs-hash-hint-ready' ) ) {
+				return;
+			}
+
+			$input.data( 'ommvs-hash-hint-ready', true );
+			$hint = ensureInlineHint( $input, 'hash' );
+			updateHashHint( $input, $hint );
+
+			$input.on( 'input change', function() {
+				updateHashHint( $input, $hint );
+			} );
+		} );
+	}
+
+	function parseVimeoVideoId( value ) {
+		var rawValue = $.trim( String( value || '' ) );
+		var url;
+		var host;
+		var protocol;
+		var segments;
+		var index;
+
+		if ( '' === rawValue ) {
+			return {
+				state: 'empty',
+				id: ''
+			};
+		}
+
+		if ( /^\d+$/.test( rawValue ) ) {
+			return {
+				state: 'numeric',
+				id: rawValue
+			};
+		}
+
+		try {
+			url = new URL( rawValue );
+		} catch ( error ) {
+			return {
+				state: 'invalid',
+				id: ''
+			};
+		}
+
+		protocol = String( url.protocol || '' ).replace( ':', '' ).toLowerCase();
+		host = String( url.hostname || '' ).toLowerCase();
+
+		if ( -1 === $.inArray( protocol, [ 'http', 'https' ] ) || -1 === $.inArray( host, [ 'vimeo.com', 'www.vimeo.com', 'player.vimeo.com' ] ) ) {
+			return {
+				state: 'invalid',
+				id: ''
+			};
+		}
+
+		segments = String( url.pathname || '' ).replace( /^\/+|\/+$/g, '' ).split( '/' );
+
+		for ( index = 0; index < segments.length; index++ ) {
+			if ( /^\d+$/.test( segments[ index ] ) ) {
+				return {
+					state: 'valid',
+					id: segments[ index ]
+				};
+			}
+		}
+
+		return {
+			state: 'invalid',
+			id: ''
+		};
+	}
+
+	function updateVimeoHint( $input, $hint ) {
+		var parsed = parseVimeoVideoId( $input.val() );
+
+		if ( 'empty' === parsed.state ) {
+			setInlineHint( $hint, 'neutral', getAdminString( 'vimeoEmpty', 'Paste a Vimeo URL, for example https://vimeo.com/879662317.' ) );
+			return;
+		}
+
+		if ( 'numeric' === parsed.state ) {
+			setInlineHint( $hint, 'warning', getAdminString( 'vimeoNumericOnly', 'Paste the full Vimeo URL, not only the numeric video ID.' ) );
+			return;
+		}
+
+		if ( 'valid' === parsed.state ) {
+			setInlineHint(
+				$hint,
+				'success',
+				formatAdminString( 'vimeoDetected', 'Detected Vimeo ID: %s', parsed.id )
+			);
+			return;
+		}
+
+		setInlineHint( $hint, 'warning', getAdminString( 'vimeoInvalid', 'This does not look like a supported Vimeo URL.' ) );
+	}
+
+	function initializeVimeoHints() {
+		$( '.ommvs-acf-field--video-url input, .ommvs-video-fallback-field--ommvs-video-url input' ).each( function() {
+			var $input = $( this );
+			var $hint;
+
+			if ( $input.data( 'ommvs-vimeo-hint-ready' ) ) {
+				return;
+			}
+
+			$input.data( 'ommvs-vimeo-hint-ready', true );
+			$hint = ensureInlineHint( $input, 'vimeo' );
+			updateVimeoHint( $input, $hint );
+
+			$input.on( 'input change', function() {
+				updateVimeoHint( $input, $hint );
+			} );
+		} );
+	}
+
+	function addStaticHint( selector, key, message, type ) {
+		$( selector ).each( function() {
+			var $field = $( this );
+			var $target = $field.find( '.acf-input, .ommvs-video-fallback-field__control' ).first();
+			var $hint;
+
+			if ( ! $target.length || $field.data( 'ommvs-static-hint-' + key ) ) {
+				return;
+			}
+
+			$field.data( 'ommvs-static-hint-' + key, true );
+			$hint = ensureInlineHint( $target, key );
+			setInlineHint( $hint, type || 'neutral', message );
+		} );
+	}
+
+	function initializeStaticVideoAdminHints() {
+		addStaticHint(
+			'.ommvs-acf-field--card-thumbnail, .ommvs-video-fallback-field--ommvs-card-thumbnail',
+			'card-thumbnail',
+			getAdminString( 'cardThumbnailHint', 'Frontend video cards use this Default Card Thumbnail. Native Featured Image is optional/admin-facing.' ),
+			'neutral'
+		);
+
+		addStaticHint(
+			'.ommvs-acf-field--related-thumbnail, .ommvs-video-fallback-field--ommvs-related-thumbnail',
+			'related-thumbnail',
+			getAdminString( 'relatedThumbnailHint', 'Optional. Related cards fall back to the Default Card Thumbnail when this is empty.' ),
+			'neutral'
+		);
+
+		addStaticHint(
+			'.ommvs-acf-field--modal-content, .ommvs-video-fallback-field--ommvs-modal-overview',
+			'modal-content',
+			getAdminString( 'modalContentHint', 'Use normal headings, paragraphs, links, and bullet lists. Avoid pasted Elementor markup.' ),
+			'neutral'
+		);
+	}
+
+	function initializeVideoAdminHints() {
+		initializeHashHints();
+		initializeVimeoHints();
+		initializeStaticVideoAdminHints();
+	}
+
+	function setVideoCategoryStatus( $metabox, message, isError, autoClear ) {
 		var $status = $metabox.find( '[data-ommvs-video-category-status]' ).first();
 
 		if ( ! $status.length ) {
 			return;
 		}
 
+		window.clearTimeout( $status.data( 'ommvs-video-category-timeout' ) );
+
 		$status
 			.toggleClass( 'is-error', !! isError )
 			.text( message || '' );
+
+		if ( autoClear && message ) {
+			$status.data(
+				'ommvs-video-category-timeout',
+				window.setTimeout( function() {
+					$status.removeClass( 'is-error' ).text( '' );
+				}, 4000 )
+			);
+		}
 	}
 
 	function sortVideoCategoryOptions( $select ) {
@@ -260,7 +504,7 @@
 
 				selectVideoCategoryTerm( $select, term );
 				$input.val( '' );
-				setVideoCategoryStatus( $metabox, message, false );
+				setVideoCategoryStatus( $metabox, message, false, true );
 				$select.trigger( 'focus' );
 			} )
 			.fail( function( xhr ) {
@@ -340,7 +584,90 @@
 		frame.open();
 	}
 
+	function copyTextToClipboard( text ) {
+		var deferred;
+		var textarea;
+		var successful;
+
+		if ( window.navigator && window.navigator.clipboard && window.navigator.clipboard.writeText ) {
+			return window.navigator.clipboard.writeText( text );
+		}
+
+		deferred = $.Deferred();
+		textarea = document.createElement( 'textarea' );
+
+		textarea.value = text;
+		textarea.setAttribute( 'readonly', 'readonly' );
+		textarea.style.position = 'fixed';
+		textarea.style.top = '-9999px';
+		textarea.style.left = '-9999px';
+
+		document.body.appendChild( textarea );
+		textarea.select();
+
+		try {
+			successful = document.execCommand( 'copy' );
+		} catch ( error ) {
+			successful = false;
+		}
+
+		document.body.removeChild( textarea );
+
+		if ( successful ) {
+			deferred.resolve();
+		} else {
+			deferred.reject();
+		}
+
+		return deferred.promise();
+	}
+
+	function setCopyHashStatus( $button, message, isError ) {
+		var $status = $button.siblings( '[data-ommvs-copy-hash-status]' ).first();
+
+		if ( ! $status.length ) {
+			$status = $( '<span />', {
+				'aria-live': 'polite',
+				'class': 'ommvs-admin-copy-hash__status',
+				'data-ommvs-copy-hash-status': ''
+			} );
+
+			$button.after( $status );
+		}
+
+		window.clearTimeout( $status.data( 'ommvs-copy-hash-timeout' ) );
+
+		$status
+			.toggleClass( 'is-error', !! isError )
+			.text( message || '' );
+
+		$status.data(
+			'ommvs-copy-hash-timeout',
+			window.setTimeout( function() {
+				$status.removeClass( 'is-error' ).text( '' );
+			}, 2200 )
+		);
+	}
+
+	function copyHash( $button ) {
+		var hash = String( $button.data( 'ommvs-copy-hash' ) || '' );
+
+		if ( ! hash ) {
+			return;
+		}
+
+		$.when( copyTextToClipboard( hash ) )
+			.done( function() {
+				setCopyHashStatus( $button, getAdminString( 'copyHashCopied', 'Copied' ), false );
+			} )
+			.fail( function() {
+				setCopyHashStatus( $button, getAdminString( 'copyHashFailed', 'Could not copy' ), true );
+			} );
+	}
+
 	$( function() {
+		initializeVideoAdminHints();
+
 		$( '[data-ommvs-placement-section]' ).each( function() {
 			initializeSection( $( this ) );
 		} );
@@ -368,6 +695,11 @@
 
 		$( document ).on( 'click', '[data-ommvs-remove-thumbnail]', function() {
 			clearThumbnail( $( this ).closest( '[data-ommvs-thumbnail]' ) );
+		} );
+
+		$( document ).on( 'click', '[data-ommvs-copy-hash]', function( event ) {
+			event.preventDefault();
+			copyHash( $( this ) );
 		} );
 
 		$( document ).on( 'click', '[data-ommvs-video-category-submit]', function() {

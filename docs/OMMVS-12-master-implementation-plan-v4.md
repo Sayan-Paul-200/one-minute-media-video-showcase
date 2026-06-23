@@ -244,54 +244,68 @@ docs/OMMVS-12-master-implementation-plan-v4.md
 
 ### Goal
 
-Define the exact editor workflow before changing field markup.
+Lock the exact editor workflow before changing field markup.
 
-### Proposed Field Groups
+### Locked UX Decisions
 
-Recommended Video Case Study edit structure:
+- The Video Readiness summary will be a read-only sidebar metabox near Publish, Video Categories, and Featured Image.
+- ACF-active field organization will use ACF tabs to avoid the current single long field stack.
+- The plugin-owned fallback UI will mirror the same conceptual sections as the ACF tab model.
+- Native WordPress Featured Image will remain visible for now.
+- Helper copy must make clear that `Default Card Thumbnail` is the frontend card thumbnail used by the plugin.
+- Any future Featured Image hiding or syncing is out of V4-1 and must be handled as a separate approved phase.
+
+### Final Field Groups
+
+Use this conceptual Video Case Study edit structure in both ACF-active and no-ACF fallback experiences:
 
 1. **Readiness**
+   - Sidebar metabox.
    - Active status.
-   - Required data status.
+   - Required field status.
    - Hash/modal link preview.
    - Vimeo URL status.
    - Data Health shortcut.
+   - Read-only; no save logic.
 
 2. **Card Content**
    - Default Card Title.
    - Default Card Description.
    - Default Card Thumbnail.
+   - Helper copy: this thumbnail is used by the frontend cards.
 
 3. **Modal Content**
    - Modal Title.
-   - Video Category.
+   - Video Category remains in the existing sidebar metabox.
    - Modal Content editor.
-   - CTA note that CTA is global.
+   - Helper copy: use normal headings, paragraphs, and bullet lists.
+   - CTA note: CTA button text and URL are global settings.
 
 4. **Video Source**
    - Vimeo Video URL.
-   - Detected Vimeo ID preview.
+   - Future helper: detected Vimeo ID and URL validation hint.
 
-5. **Related Card / Optional Media**
+5. **Related / Optional Media**
    - Related Thumbnail Override.
+   - Helper copy: optional; falls back to Default Card Thumbnail.
 
 6. **Migration Notes**
    - Admin Notes.
-   - Legacy popup/hash references if needed.
+   - Internal-only notes for legacy popup IDs, verification, and migration context.
 
-### Tasks
+### Implementation Notes For Later Phases
 
-1. Decide whether the readiness panel should be a side metabox or a top notice-style panel.
-2. Decide exact helper copy and labels.
-3. Decide if ACF fields should use tabs, accordions, or plain grouped fields.
-4. Define fallback UI section order to match ACF UI.
-5. Decide how to explain the difference between plugin-owned Default Card Thumbnail and native WordPress Featured Image.
-6. Decide whether native Featured Image should remain visible as an admin convenience or be hidden from the Video CPT edit screen in a later phase.
+- V4-2 implements the ACF tab grouping and ACF-active helper copy.
+- V4-3 mirrors the same section model in the no-ACF fallback UI.
+- V4-4 adds the sidebar readiness metabox.
+- V4-5 can add live inline hints, such as hash preview and detected Vimeo ID.
+- V4-1 itself should only update this plan document.
 
 ### Acceptance Criteria
 
-- Editor workflow is agreed before implementation.
+- Editor workflow is decision-complete before implementation.
 - ACF-active and ACF-inactive experiences will present the same conceptual sections.
+- V4-2, V4-3, and V4-4 have clear responsibility boundaries.
 
 ## Phase V4-2: Improve ACF-Active Video CPT Field UI
 
@@ -314,8 +328,8 @@ admin/js/one-minute-media-video-showcase-admin.js
 
 ### Planned Changes
 
-1. Reorganize the ACF field group using ACF Free-compatible UI helpers:
-   - Tabs or grouping fields where supported.
+1. Reorganize the ACF field group using ACF Free-compatible tab fields:
+   - Tabs are the approved grouping model.
    - Clear section labels.
    - Better field instructions.
    - Avoid the current single long stack shown in the V4 reference screenshot.
@@ -333,7 +347,7 @@ admin/js/one-minute-media-video-showcase-admin.js
    - Mention only Vimeo URLs are accepted.
 5. Add a clear thumbnail usage note:
    - Default Card Thumbnail is the frontend card thumbnail.
-   - Native Featured Image is optional/admin-facing unless a future phase explicitly syncs or hides it.
+   - Native Featured Image remains visible and is optional/admin-facing unless a future phase explicitly syncs or hides it.
 6. Add CSS scoped to the ACF field group on Video CPT edit screens:
    - Better spacing.
    - Softer section separation.
@@ -376,7 +390,7 @@ admin/js/one-minute-media-video-showcase-admin.js
 ### Planned Changes
 
 1. Replace the fallback `form-table` layout with plugin-owned section cards.
-2. Match the same conceptual grouping from V4-1:
+2. Match the same conceptual grouping from the final V4-1 model:
    - Readiness.
    - Card Content.
    - Modal Content.
@@ -412,6 +426,8 @@ admin/js/one-minute-media-video-showcase-admin.js
 ### Goal
 
 Give admins an at-a-glance summary of whether a Video Case Study is ready for page placement and frontend use.
+
+The readiness summary must be rendered as a sidebar metabox.
 
 ### Proposed New Class
 

@@ -118,11 +118,23 @@ class One_Minute_Media_Video_Showcase_Admin {
 			'ommvsAdmin',
 			array(
 				'strings' => array(
-					'addingCategory'       => __( 'Adding category...', 'one-minute-media-video-showcase' ),
-					'categoryAddFailed'    => __( 'Could not add the category. Please try again.', 'one-minute-media-video-showcase' ),
-					'categoryNameRequired' => __( 'Enter a category name first.', 'one-minute-media-video-showcase' ),
-					'chooseThumbnail'      => __( 'Choose Thumbnail', 'one-minute-media-video-showcase' ),
-					'useThumbnail'         => __( 'Use Thumbnail', 'one-minute-media-video-showcase' ),
+					'addingCategory'          => __( 'Adding category...', 'one-minute-media-video-showcase' ),
+					'cardThumbnailHint'       => __( 'Frontend video cards use this Default Card Thumbnail. Native Featured Image is optional/admin-facing.', 'one-minute-media-video-showcase' ),
+					'categoryAddFailed'       => __( 'Could not add the category. Please try again.', 'one-minute-media-video-showcase' ),
+					'categoryNameRequired'    => __( 'Enter a category name first.', 'one-minute-media-video-showcase' ),
+					'chooseThumbnail'         => __( 'Choose Thumbnail', 'one-minute-media-video-showcase' ),
+					'copyHashCopied'          => __( 'Copied', 'one-minute-media-video-showcase' ),
+					'copyHashFailed'          => __( 'Could not copy', 'one-minute-media-video-showcase' ),
+					'hashLeadingHashWarning'  => __( 'Store this as "%s" without the leading #. The plugin will still open #hash URLs on the frontend.', 'one-minute-media-video-showcase' ),
+					'hashPreview'             => __( 'Frontend hash preview: #%s', 'one-minute-media-video-showcase' ),
+					'hashPreviewEmpty'        => __( 'Enter a hash slug to preview its frontend URL hash.', 'one-minute-media-video-showcase' ),
+					'modalContentHint'        => __( 'Use normal headings, paragraphs, links, and bullet lists. Avoid pasted Elementor markup.', 'one-minute-media-video-showcase' ),
+					'relatedThumbnailHint'    => __( 'Optional. Related cards fall back to the Default Card Thumbnail when this is empty.', 'one-minute-media-video-showcase' ),
+					'useThumbnail'            => __( 'Use Thumbnail', 'one-minute-media-video-showcase' ),
+					'vimeoDetected'           => __( 'Detected Vimeo ID: %s', 'one-minute-media-video-showcase' ),
+					'vimeoEmpty'              => __( 'Paste a Vimeo URL, for example https://vimeo.com/879662317.', 'one-minute-media-video-showcase' ),
+					'vimeoInvalid'            => __( 'This does not look like a supported Vimeo URL.', 'one-minute-media-video-showcase' ),
+					'vimeoNumericOnly'        => __( 'Paste the full Vimeo URL, not only the numeric video ID.', 'one-minute-media-video-showcase' ),
 				),
 				'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 				'videoCategoryNonce' => class_exists( 'OMMVS_Taxonomy_Video_Category' ) ? wp_create_nonce( OMMVS_Taxonomy_Video_Category::ADD_NONCE_ACTION ) : '',
@@ -160,6 +172,7 @@ class One_Minute_Media_Video_Showcase_Admin {
 
 		return $this->is_page_edit_screen( $hook_suffix )
 			|| $this->is_settings_screen( $hook_suffix )
+			|| $this->is_video_case_study_list_screen( $hook_suffix )
 			|| $this->is_video_case_study_edit_screen( $hook_suffix )
 			|| $this->is_video_case_study_fallback_edit_screen( $hook_suffix );
 

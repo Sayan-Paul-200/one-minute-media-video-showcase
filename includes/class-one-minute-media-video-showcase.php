@@ -79,6 +79,7 @@ class One_Minute_Media_Video_Showcase {
 		$this->define_cpt_hooks();
 		$this->define_taxonomy_hooks();
 		$this->define_field_hooks();
+		$this->define_video_admin_ui_hooks();
 		$this->define_settings_hooks();
 		$this->define_data_health_hooks();
 		$this->define_admin_hooks();
@@ -133,6 +134,11 @@ class One_Minute_Media_Video_Showcase {
 		 * The class responsible for defining field keys and field-system hooks.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-fields.php';
+
+		/**
+		 * The class responsible for Video Case Study admin UI helpers.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ommvs-video-admin-ui.php';
 
 		/**
 		 * The class responsible for global modal settings.
@@ -215,6 +221,9 @@ class One_Minute_Media_Video_Showcase {
 		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_cpt_video, 'remove_slug_metabox' );
 		$this->loader->add_filter( 'manage_video_case_study_posts_columns', $plugin_cpt_video, 'filter_admin_columns' );
 		$this->loader->add_action( 'manage_video_case_study_posts_custom_column', $plugin_cpt_video, 'render_admin_column', 10, 2 );
+		$this->loader->add_action( 'restrict_manage_posts', $plugin_cpt_video, 'render_admin_filters', 10, 2 );
+		$this->loader->add_action( 'pre_get_posts', $plugin_cpt_video, 'filter_admin_query' );
+		$this->loader->add_filter( 'post_row_actions', $plugin_cpt_video, 'filter_row_actions', 10, 2 );
 
 	}
 
@@ -253,6 +262,20 @@ class One_Minute_Media_Video_Showcase {
 		$this->loader->add_action( 'save_post_page', $plugin_fields, 'save_page_placements', 10, 3 );
 		$this->loader->add_action( 'admin_notices', $plugin_fields, 'maybe_show_missing_acf_notice' );
 		$this->loader->add_action( 'admin_notices', $plugin_fields, 'maybe_show_page_placement_notices' );
+
+	}
+
+	/**
+	 * Register Video Case Study admin UI helper hooks.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_video_admin_ui_hooks() {
+
+		$plugin_video_admin_ui = new OMMVS_Video_Admin_UI();
+
+		$this->loader->add_action( 'add_meta_boxes_video_case_study', $plugin_video_admin_ui, 'register_readiness_metabox' );
 
 	}
 

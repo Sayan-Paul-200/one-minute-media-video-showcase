@@ -242,6 +242,12 @@ class OMMVS_Fields {
 				'title'                 => __( 'Video Showcase Details', 'one-minute-media-video-showcase' ),
 				'fields'                => array(
 					array(
+						'key'       => 'field_ommvs_tab_setup',
+						'label'     => __( 'Setup', 'one-minute-media-video-showcase' ),
+						'type'      => 'tab',
+						'placement' => 'top',
+					),
+					array(
 						'key'           => 'field_ommvs_hash_slug',
 						'label'         => __( 'Hash Slug', 'one-minute-media-video-showcase' ),
 						'name'          => self::FIELD_HASH_SLUG,
@@ -249,6 +255,11 @@ class OMMVS_Fields {
 						'instructions'  => __( 'Legacy URL hash without the leading #, for example nick-kyrgios.', 'one-minute-media-video-showcase' ),
 						'required'      => 1,
 						'placeholder'   => 'nick-kyrgios',
+						'wrapper'       => array(
+							'width' => '70',
+							'class' => 'ommvs-acf-field ommvs-acf-field--hash-slug',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'           => 'field_ommvs_is_active',
@@ -261,6 +272,30 @@ class OMMVS_Fields {
 						'ui'            => 1,
 						'ui_on_text'    => __( 'Active', 'one-minute-media-video-showcase' ),
 						'ui_off_text'   => __( 'Inactive', 'one-minute-media-video-showcase' ),
+						'wrapper'       => array(
+							'width' => '30',
+							'class' => 'ommvs-acf-field ommvs-acf-field--active',
+							'id'    => '',
+						),
+					),
+					array(
+						'key'       => 'field_ommvs_tab_card_content',
+						'label'     => __( 'Card Content', 'one-minute-media-video-showcase' ),
+						'type'      => 'tab',
+						'placement' => 'top',
+					),
+					array(
+						'key'       => 'field_ommvs_card_content_note',
+						'label'     => __( 'Card Content Guidance', 'one-minute-media-video-showcase' ),
+						'type'      => 'message',
+						'message'   => __( 'These fields power the frontend video grid cards. The Default Card Thumbnail is the image used by the plugin on video cards.', 'one-minute-media-video-showcase' ),
+						'new_lines' => 'wpautop',
+						'esc_html'  => 1,
+						'wrapper'   => array(
+							'width' => '',
+							'class' => 'ommvs-acf-message ommvs-acf-message--card-content',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'           => 'field_ommvs_card_title',
@@ -269,6 +304,11 @@ class OMMVS_Fields {
 						'type'          => 'text',
 						'instructions'  => __( 'Title used on video cards.', 'one-minute-media-video-showcase' ),
 						'required'      => 1,
+						'wrapper'       => array(
+							'width' => '50',
+							'class' => 'ommvs-acf-field ommvs-acf-field--card-title',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'           => 'field_ommvs_card_description',
@@ -279,17 +319,46 @@ class OMMVS_Fields {
 						'required'      => 1,
 						'rows'          => 3,
 						'new_lines'     => '',
+						'wrapper'       => array(
+							'width' => '50',
+							'class' => 'ommvs-acf-field ommvs-acf-field--card-description',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'            => 'field_ommvs_card_thumbnail',
 						'label'          => __( 'Default Card Thumbnail', 'one-minute-media-video-showcase' ),
 						'name'           => self::FIELD_CARD_THUMBNAIL,
 						'type'           => 'image',
-						'instructions'   => __( 'Default card thumbnail. Stored as an attachment ID for consistent rendering.', 'one-minute-media-video-showcase' ),
+						'instructions'   => __( 'Frontend card thumbnail. Stored as an attachment ID for consistent rendering. The native Featured Image box may remain visible for admin convenience, but frontend cards use this field.', 'one-minute-media-video-showcase' ),
 						'required'       => 1,
 						'return_format'  => 'id',
 						'preview_size'   => 'medium',
 						'library'        => 'all',
+						'wrapper'        => array(
+							'width' => '',
+							'class' => 'ommvs-acf-field ommvs-acf-field--card-thumbnail',
+							'id'    => '',
+						),
+					),
+					array(
+						'key'       => 'field_ommvs_tab_modal_content',
+						'label'     => __( 'Modal Content', 'one-minute-media-video-showcase' ),
+						'type'      => 'tab',
+						'placement' => 'top',
+					),
+					array(
+						'key'       => 'field_ommvs_modal_content_note',
+						'label'     => __( 'Modal Authoring Guidance', 'one-minute-media-video-showcase' ),
+						'type'      => 'message',
+						'message'   => __( 'Use normal WordPress headings, paragraphs, and bullet lists. Avoid pasting Elementor section markup. Video Category is selected in the sidebar, and the modal CTA is controlled from plugin settings.', 'one-minute-media-video-showcase' ),
+						'new_lines' => 'wpautop',
+						'esc_html'  => 1,
+						'wrapper'   => array(
+							'width' => '',
+							'class' => 'ommvs-acf-message ommvs-acf-message--modal-content',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'           => 'field_ommvs_modal_title',
@@ -300,27 +369,80 @@ class OMMVS_Fields {
 						'required'      => 1,
 						'rows'          => 2,
 						'new_lines'     => 'br',
+						'wrapper'       => array(
+							'width' => '',
+							'class' => 'ommvs-acf-field ommvs-acf-field--modal-title',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'           => 'field_ommvs_modal_overview',
 						'label'         => __( 'Modal Content', 'one-minute-media-video-showcase' ),
 						'name'          => self::FIELD_MODAL_CONTENT,
 						'type'          => 'wysiwyg',
-						'instructions'  => __( 'Full modal body content displayed under the modal title and category. Include headings, paragraphs, and bullet lists here.', 'one-minute-media-video-showcase' ),
+						'instructions'  => __( 'Full modal body content displayed under the modal title and category. Use the editor controls for headings, paragraphs, links, and bullet lists.', 'one-minute-media-video-showcase' ),
 						'required'      => 1,
 						'tabs'          => 'all',
 						'toolbar'       => 'full',
 						'media_upload'  => 1,
 						'delay'         => 0,
+						'wrapper'       => array(
+							'width' => '',
+							'class' => 'ommvs-acf-field ommvs-acf-field--modal-content',
+							'id'    => '',
+						),
+					),
+					array(
+						'key'       => 'field_ommvs_tab_video_source',
+						'label'     => __( 'Video Source', 'one-minute-media-video-showcase' ),
+						'type'      => 'tab',
+						'placement' => 'top',
+					),
+					array(
+						'key'       => 'field_ommvs_video_source_note',
+						'label'     => __( 'Vimeo URL Guidance', 'one-minute-media-video-showcase' ),
+						'type'      => 'message',
+						'message'   => __( 'Only Vimeo URLs are accepted. Valid examples include https://vimeo.com/879662317 and https://player.vimeo.com/video/879662317.', 'one-minute-media-video-showcase' ),
+						'new_lines' => 'wpautop',
+						'esc_html'  => 1,
+						'wrapper'   => array(
+							'width' => '',
+							'class' => 'ommvs-acf-message ommvs-acf-message--video-source',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'          => 'field_ommvs_video_url',
 						'label'        => __( 'Vimeo Video URL', 'one-minute-media-video-showcase' ),
 						'name'         => self::FIELD_VIDEO_URL,
 						'type'         => 'url',
-						'instructions' => __( 'Paste the Vimeo video URL, for example https://vimeo.com/879662317.', 'one-minute-media-video-showcase' ),
+						'instructions' => __( 'Paste the Vimeo video URL. Query strings are allowed when the URL still contains a numeric Vimeo video ID.', 'one-minute-media-video-showcase' ),
 						'required'     => 1,
 						'placeholder'  => 'https://vimeo.com/879662317',
+						'wrapper'      => array(
+							'width' => '',
+							'class' => 'ommvs-acf-field ommvs-acf-field--video-url',
+							'id'    => '',
+						),
+					),
+					array(
+						'key'       => 'field_ommvs_tab_related_optional',
+						'label'     => __( 'Related / Optional Media', 'one-minute-media-video-showcase' ),
+						'type'      => 'tab',
+						'placement' => 'top',
+					),
+					array(
+						'key'       => 'field_ommvs_related_optional_note',
+						'label'     => __( 'Related Card Guidance', 'one-minute-media-video-showcase' ),
+						'type'      => 'message',
+						'message'   => __( 'Related cards normally use the Default Card Thumbnail. Add an override only when the modal related-card thumbnail should differ.', 'one-minute-media-video-showcase' ),
+						'new_lines' => 'wpautop',
+						'esc_html'  => 1,
+						'wrapper'   => array(
+							'width' => '',
+							'class' => 'ommvs-acf-message ommvs-acf-message--related-optional',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'            => 'field_ommvs_related_thumbnail',
@@ -332,6 +454,30 @@ class OMMVS_Fields {
 						'return_format'  => 'id',
 						'preview_size'   => 'medium',
 						'library'        => 'all',
+						'wrapper'        => array(
+							'width' => '',
+							'class' => 'ommvs-acf-field ommvs-acf-field--related-thumbnail',
+							'id'    => '',
+						),
+					),
+					array(
+						'key'       => 'field_ommvs_tab_migration_notes',
+						'label'     => __( 'Migration Notes', 'one-minute-media-video-showcase' ),
+						'type'      => 'tab',
+						'placement' => 'top',
+					),
+					array(
+						'key'       => 'field_ommvs_migration_notes_note',
+						'label'     => __( 'Internal Notes Guidance', 'one-minute-media-video-showcase' ),
+						'type'      => 'message',
+						'message'   => __( 'Use Admin Notes for legacy popup IDs, verification notes, source URLs, and other internal migration context. These notes are never rendered on the frontend.', 'one-minute-media-video-showcase' ),
+						'new_lines' => 'wpautop',
+						'esc_html'  => 1,
+						'wrapper'   => array(
+							'width' => '',
+							'class' => 'ommvs-acf-message ommvs-acf-message--migration-notes',
+							'id'    => '',
+						),
 					),
 					array(
 						'key'           => 'field_ommvs_admin_notes',
@@ -342,6 +488,11 @@ class OMMVS_Fields {
 						'required'      => 0,
 						'rows'          => 4,
 						'new_lines'     => '',
+						'wrapper'       => array(
+							'width' => '',
+							'class' => 'ommvs-acf-field ommvs-acf-field--admin-notes',
+							'id'    => '',
+						),
 					),
 				),
 				'location'              => array(
@@ -404,26 +555,43 @@ class OMMVS_Fields {
 
 		?>
 		<div class="ommvs-video-fallback-fields">
-			<p class="description">
-				<?php esc_html_e( 'ACF Free is not active, so these plugin-owned fallback fields are saving directly to the same Video Case Study meta keys.', 'one-minute-media-video-showcase' ); ?>
-			</p>
+			<div class="ommvs-video-fallback-fields__notice">
+				<strong><?php esc_html_e( 'Fallback editor active.', 'one-minute-media-video-showcase' ); ?></strong>
+				<span><?php esc_html_e( 'ACF Free is not active, so these plugin-owned fields save directly to the same Video Case Study meta keys used by the ACF editor.', 'one-minute-media-video-showcase' ); ?></span>
+			</div>
 
-			<table class="form-table ommvs-video-fallback-fields__table" role="presentation">
-				<tbody>
-					<?php
-					$this->render_fallback_text_field( $post->ID, self::FIELD_HASH_SLUG, __( 'Hash Slug', 'one-minute-media-video-showcase' ), __( 'Legacy URL hash without the leading #, for example nick-kyrgios.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_checkbox_field( $post->ID, self::FIELD_IS_ACTIVE, __( 'Active', 'one-minute-media-video-showcase' ), __( 'Inactive videos should not be used in page placements.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_text_field( $post->ID, self::FIELD_CARD_TITLE, __( 'Default Card Title', 'one-minute-media-video-showcase' ), __( 'Title used on video cards.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_textarea_field( $post->ID, self::FIELD_CARD_DESCRIPTION, __( 'Default Card Description', 'one-minute-media-video-showcase' ), __( 'Short description used on video cards.', 'one-minute-media-video-showcase' ), 3 );
-					$this->render_fallback_thumbnail_field( $post->ID, self::FIELD_CARD_THUMBNAIL, __( 'Default Card Thumbnail', 'one-minute-media-video-showcase' ), __( 'Default card thumbnail. Stored as an attachment ID for consistent rendering.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_textarea_field( $post->ID, self::FIELD_MODAL_TITLE, __( 'Modal Title', 'one-minute-media-video-showcase' ), __( 'Title displayed in the modal. This can differ from the card title.', 'one-minute-media-video-showcase' ), 2 );
-					$this->render_fallback_editor_field( $post->ID, self::FIELD_MODAL_CONTENT, __( 'Modal Content', 'one-minute-media-video-showcase' ), __( 'Full modal body content displayed under the modal title and category. Include headings, paragraphs, and bullet lists here.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_url_field( $post->ID, self::FIELD_VIDEO_URL, __( 'Vimeo Video URL', 'one-minute-media-video-showcase' ), __( 'Paste the Vimeo video URL, for example https://vimeo.com/879662317.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_thumbnail_field( $post->ID, self::FIELD_RELATED_THUMBNAIL, __( 'Related Thumbnail Override', 'one-minute-media-video-showcase' ), __( 'Optional thumbnail for related cards. Leave empty to use the default card thumbnail.', 'one-minute-media-video-showcase' ) );
-					$this->render_fallback_textarea_field( $post->ID, self::FIELD_ADMIN_NOTES, __( 'Admin Notes', 'one-minute-media-video-showcase' ), __( 'Internal migration or editorial notes. Not rendered on the frontend.', 'one-minute-media-video-showcase' ), 4 );
-					?>
-				</tbody>
-			</table>
+			<div class="ommvs-video-fallback-sections">
+				<?php $this->render_fallback_section_open( __( 'Setup', 'one-minute-media-video-showcase' ), __( 'Control the reusable video record and its legacy hash route.', 'one-minute-media-video-showcase' ), 'setup' ); ?>
+					<?php $this->render_fallback_text_field( $post->ID, self::FIELD_HASH_SLUG, __( 'Hash Slug', 'one-minute-media-video-showcase' ), __( 'Legacy URL hash without the leading #, for example nick-kyrgios.', 'one-minute-media-video-showcase' ) ); ?>
+					<?php $this->render_fallback_checkbox_field( $post->ID, self::FIELD_IS_ACTIVE, __( 'Active', 'one-minute-media-video-showcase' ), __( 'Inactive videos should not be used in page placements.', 'one-minute-media-video-showcase' ) ); ?>
+				<?php $this->render_fallback_section_close(); ?>
+
+				<?php $this->render_fallback_section_open( __( 'Card Content', 'one-minute-media-video-showcase' ), __( 'These fields power the frontend video grid cards.', 'one-minute-media-video-showcase' ), 'card-content' ); ?>
+					<?php $this->render_fallback_guidance( __( 'Thumbnail source', 'one-minute-media-video-showcase' ), __( 'Default Card Thumbnail is the frontend card image used by the plugin. The native Featured Image box may remain visible for admin convenience, but frontend cards use this field.', 'one-minute-media-video-showcase' ) ); ?>
+					<?php $this->render_fallback_text_field( $post->ID, self::FIELD_CARD_TITLE, __( 'Default Card Title', 'one-minute-media-video-showcase' ), __( 'Title used on video cards.', 'one-minute-media-video-showcase' ) ); ?>
+					<?php $this->render_fallback_textarea_field( $post->ID, self::FIELD_CARD_DESCRIPTION, __( 'Default Card Description', 'one-minute-media-video-showcase' ), __( 'Short description used on video cards.', 'one-minute-media-video-showcase' ), 3 ); ?>
+					<?php $this->render_fallback_thumbnail_field( $post->ID, self::FIELD_CARD_THUMBNAIL, __( 'Default Card Thumbnail', 'one-minute-media-video-showcase' ), __( 'Choose the thumbnail shown on frontend video cards.', 'one-minute-media-video-showcase' ) ); ?>
+				<?php $this->render_fallback_section_close(); ?>
+
+				<?php $this->render_fallback_section_open( __( 'Modal Content', 'one-minute-media-video-showcase' ), __( 'Content shown inside the shared video modal.', 'one-minute-media-video-showcase' ), 'modal-content' ); ?>
+					<?php $this->render_fallback_guidance( __( 'Authoring guidance', 'one-minute-media-video-showcase' ), __( 'Use normal WordPress headings, paragraphs, links, and bullet lists. Video Category is selected in the sidebar, and the modal CTA is controlled from plugin settings.', 'one-minute-media-video-showcase' ) ); ?>
+					<?php $this->render_fallback_textarea_field( $post->ID, self::FIELD_MODAL_TITLE, __( 'Modal Title', 'one-minute-media-video-showcase' ), __( 'Title displayed in the modal. This can differ from the card title.', 'one-minute-media-video-showcase' ), 2 ); ?>
+					<?php $this->render_fallback_editor_field( $post->ID, self::FIELD_MODAL_CONTENT, __( 'Modal Content', 'one-minute-media-video-showcase' ), __( 'Full modal body content displayed under the modal title and category.', 'one-minute-media-video-showcase' ) ); ?>
+				<?php $this->render_fallback_section_close(); ?>
+
+				<?php $this->render_fallback_section_open( __( 'Video Source', 'one-minute-media-video-showcase' ), __( 'Vimeo is the only supported playback provider.', 'one-minute-media-video-showcase' ), 'video-source' ); ?>
+					<?php $this->render_fallback_guidance( __( 'Accepted Vimeo URLs', 'one-minute-media-video-showcase' ), __( 'Valid examples include https://vimeo.com/879662317 and https://player.vimeo.com/video/879662317.', 'one-minute-media-video-showcase' ) ); ?>
+					<?php $this->render_fallback_url_field( $post->ID, self::FIELD_VIDEO_URL, __( 'Vimeo Video URL', 'one-minute-media-video-showcase' ), __( 'Paste the Vimeo video URL. Query strings are allowed when the URL still contains a numeric Vimeo video ID.', 'one-minute-media-video-showcase' ) ); ?>
+				<?php $this->render_fallback_section_close(); ?>
+
+				<?php $this->render_fallback_section_open( __( 'Related / Optional Media', 'one-minute-media-video-showcase' ), __( 'Optional media used only in modal related cards.', 'one-minute-media-video-showcase' ), 'related-optional' ); ?>
+					<?php $this->render_fallback_thumbnail_field( $post->ID, self::FIELD_RELATED_THUMBNAIL, __( 'Related Thumbnail Override', 'one-minute-media-video-showcase' ), __( 'Optional thumbnail for related cards. Leave empty to use the Default Card Thumbnail.', 'one-minute-media-video-showcase' ) ); ?>
+				<?php $this->render_fallback_section_close(); ?>
+
+				<?php $this->render_fallback_section_open( __( 'Migration Notes', 'one-minute-media-video-showcase' ), __( 'Internal-only notes for migration and editorial context.', 'one-minute-media-video-showcase' ), 'migration-notes' ); ?>
+					<?php $this->render_fallback_textarea_field( $post->ID, self::FIELD_ADMIN_NOTES, __( 'Admin Notes', 'one-minute-media-video-showcase' ), __( 'Legacy popup IDs, verification notes, source URLs, and editorial notes. Not rendered on the frontend.', 'one-minute-media-video-showcase' ), 4 ); ?>
+				<?php $this->render_fallback_section_close(); ?>
+			</div>
 		</div>
 		<?php
 
@@ -482,6 +650,59 @@ class OMMVS_Fields {
 	}
 
 	/**
+	 * Open one fallback editor section.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $title          Section title.
+	 * @param    string    $description    Section description.
+	 * @param    string    $modifier       Section modifier class.
+	 */
+	private function render_fallback_section_open( $title, $description, $modifier ) {
+
+		?>
+		<section class="ommvs-video-fallback-section ommvs-video-fallback-section--<?php echo esc_attr( sanitize_html_class( $modifier ) ); ?>">
+			<header class="ommvs-video-fallback-section__header">
+				<h3><?php echo esc_html( $title ); ?></h3>
+				<p><?php echo esc_html( $description ); ?></p>
+			</header>
+			<div class="ommvs-video-fallback-section__grid">
+		<?php
+
+	}
+
+	/**
+	 * Close one fallback editor section.
+	 *
+	 * @since    1.0.0
+	 */
+	private function render_fallback_section_close() {
+
+		?>
+			</div>
+		</section>
+		<?php
+
+	}
+
+	/**
+	 * Render a fallback guidance message.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $title      Message title.
+	 * @param    string    $message    Message body.
+	 */
+	private function render_fallback_guidance( $title, $message ) {
+
+		?>
+		<div class="ommvs-video-fallback-guidance">
+			<strong><?php echo esc_html( $title ); ?></strong>
+			<span><?php echo esc_html( $message ); ?></span>
+		</div>
+		<?php
+
+	}
+
+	/**
 	 * Render a fallback text field row.
 	 *
 	 * @since    1.0.0
@@ -527,11 +748,12 @@ class OMMVS_Fields {
 		$value    = (string) get_post_meta( $post_id, $meta_key, true );
 
 		?>
-		<tr>
-			<th scope="row">
+		<div class="<?php echo esc_attr( $this->get_fallback_field_classes( $meta_key ) ); ?>">
+			<div class="ommvs-video-fallback-field__label">
 				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
-			</th>
-			<td>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</div>
+			<div class="ommvs-video-fallback-field__control">
 				<input
 					type="<?php echo esc_attr( $type ); ?>"
 					id="<?php echo esc_attr( $field_id ); ?>"
@@ -539,9 +761,8 @@ class OMMVS_Fields {
 					value="<?php echo esc_attr( $value ); ?>"
 					class="regular-text"
 				/>
-				<p class="description"><?php echo esc_html( $description ); ?></p>
-			</td>
-		</tr>
+			</div>
+		</div>
 		<?php
 
 	}
@@ -562,10 +783,13 @@ class OMMVS_Fields {
 		$checked  = '' === $value || '0' !== (string) $value;
 
 		?>
-		<tr>
-			<th scope="row"><?php echo esc_html( $label ); ?></th>
-			<td>
-				<label for="<?php echo esc_attr( $field_id ); ?>">
+		<div class="<?php echo esc_attr( $this->get_fallback_field_classes( $meta_key, 'ommvs-video-fallback-field--toggle' ) ); ?>">
+			<div class="ommvs-video-fallback-field__label">
+				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</div>
+			<div class="ommvs-video-fallback-field__control">
+				<label class="ommvs-video-fallback-toggle" for="<?php echo esc_attr( $field_id ); ?>">
 					<input
 						type="checkbox"
 						id="<?php echo esc_attr( $field_id ); ?>"
@@ -573,11 +797,11 @@ class OMMVS_Fields {
 						value="1"
 						<?php checked( $checked ); ?>
 					/>
-					<?php esc_html_e( 'Active', 'one-minute-media-video-showcase' ); ?>
+					<span class="ommvs-video-fallback-toggle__switch" aria-hidden="true"></span>
+					<span class="ommvs-video-fallback-toggle__text"><?php esc_html_e( 'Active', 'one-minute-media-video-showcase' ); ?></span>
 				</label>
-				<p class="description"><?php echo esc_html( $description ); ?></p>
-			</td>
-		</tr>
+			</div>
+		</div>
 		<?php
 
 	}
@@ -599,20 +823,20 @@ class OMMVS_Fields {
 		$value    = (string) get_post_meta( $post_id, $meta_key, true );
 
 		?>
-		<tr>
-			<th scope="row">
+		<div class="<?php echo esc_attr( $this->get_fallback_field_classes( $meta_key ) ); ?>">
+			<div class="ommvs-video-fallback-field__label">
 				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
-			</th>
-			<td>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</div>
+			<div class="ommvs-video-fallback-field__control">
 				<textarea
 					id="<?php echo esc_attr( $field_id ); ?>"
 					name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']' ); ?>"
 					rows="<?php echo esc_attr( (string) absint( $rows ) ); ?>"
 					class="large-text"
 				><?php echo esc_textarea( $allow_html ? wp_kses_post( $value ) : $value ); ?></textarea>
-				<p class="description"><?php echo esc_html( $description ); ?></p>
-			</td>
-		</tr>
+			</div>
+		</div>
 		<?php
 
 	}
@@ -632,11 +856,12 @@ class OMMVS_Fields {
 		$value    = (string) get_post_meta( $post_id, $meta_key, true );
 
 		?>
-		<tr>
-			<th scope="row">
+		<div class="<?php echo esc_attr( $this->get_fallback_field_classes( $meta_key, 'ommvs-video-fallback-field--editor' ) ); ?>">
+			<div class="ommvs-video-fallback-field__label">
 				<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
-			</th>
-			<td>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</div>
+			<div class="ommvs-video-fallback-field__control">
 				<div class="ommvs-video-fallback-editor">
 					<?php
 					wp_editor(
@@ -653,9 +878,8 @@ class OMMVS_Fields {
 					);
 					?>
 				</div>
-				<p class="description"><?php echo esc_html( $description ); ?></p>
-			</td>
-		</tr>
+			</div>
+		</div>
 		<?php
 
 	}
@@ -671,6 +895,7 @@ class OMMVS_Fields {
 	 */
 	private function render_fallback_thumbnail_field( $post_id, $meta_key, $label, $description ) {
 
+		$field_id     = 'ommvs-' . str_replace( '_', '-', $meta_key );
 		$thumbnail_id = absint( get_post_meta( $post_id, $meta_key, true ) );
 
 		if ( ! $this->is_valid_attachment( $thumbnail_id ) ) {
@@ -678,12 +903,16 @@ class OMMVS_Fields {
 		}
 
 		?>
-		<tr>
-			<th scope="row"><?php echo esc_html( $label ); ?></th>
-			<td>
+		<div class="<?php echo esc_attr( $this->get_fallback_field_classes( $meta_key, 'ommvs-video-fallback-field--thumbnail' ) ); ?>">
+			<div class="ommvs-video-fallback-field__label">
+				<label for="<?php echo esc_attr( $field_id . '-button' ); ?>"><?php echo esc_html( $label ); ?></label>
+				<p class="description"><?php echo esc_html( $description ); ?></p>
+			</div>
+			<div class="ommvs-video-fallback-field__control">
 				<div class="ommvs-placement-thumbnail ommvs-video-fallback-thumbnail" data-ommvs-thumbnail>
 					<input
 						type="hidden"
+						id="<?php echo esc_attr( $field_id ); ?>"
 						name="<?php echo esc_attr( self::VIDEO_FALLBACK_FIELD_GROUP . '[' . $meta_key . ']' ); ?>"
 						value="<?php echo esc_attr( (string) $thumbnail_id ); ?>"
 						data-ommvs-thumbnail-id
@@ -705,7 +934,7 @@ class OMMVS_Fields {
 						?>
 					</div>
 					<div class="ommvs-placement-thumbnail__actions">
-						<button type="button" class="button button-secondary" data-ommvs-select-thumbnail>
+						<button type="button" id="<?php echo esc_attr( $field_id . '-button' ); ?>" class="button button-secondary" data-ommvs-select-thumbnail>
 							<?php esc_html_e( 'Choose Image', 'one-minute-media-video-showcase' ); ?>
 						</button>
 						<button type="button" class="button-link-delete" data-ommvs-remove-thumbnail <?php echo $thumbnail_id ? '' : 'hidden'; ?>>
@@ -713,10 +942,32 @@ class OMMVS_Fields {
 						</button>
 					</div>
 				</div>
-				<p class="description"><?php echo esc_html( $description ); ?></p>
-			</td>
-		</tr>
+			</div>
+		</div>
 		<?php
+
+	}
+
+	/**
+	 * Build fallback field CSS classes.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $meta_key       Meta key.
+	 * @param    string    $extra_class    Extra CSS classes.
+	 * @return   string
+	 */
+	private function get_fallback_field_classes( $meta_key, $extra_class = '' ) {
+
+		$classes = array(
+			'ommvs-video-fallback-field',
+			'ommvs-video-fallback-field--' . sanitize_html_class( str_replace( '_', '-', $meta_key ) ),
+		);
+
+		if ( '' !== $extra_class ) {
+			$classes[] = $extra_class;
+		}
+
+		return implode( ' ', $classes );
 
 	}
 
